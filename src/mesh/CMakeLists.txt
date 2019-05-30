@@ -23,13 +23,27 @@ SET_TARGET_PROPERTIES (
     PROPERTIES LINKER_LANGUAGE CXX
 )
 
+
+find_package(METIS)
+if(METIS_FOUND)
+  set(GLOBAL_INCLUDE_DIRS ${GLOBAL_INCLUDE_DIRS} ${METIS_INCLUDE_DIRS})
+  message("-- METIS found")
+  add_definitions(-DWITH_METIS)
+else()
+  message("-- METIS not found")
+endif()
+
+
 TARGET_INCLUDE_DIRECTORIES(mesh PUBLIC
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/src/uint256
+  ${METIS_INCLUDE_DIRS}
 )
 
 
-if(Boost_FOUND)
+
+
+if(0)#Boost_FOUND)
   TARGET_LINK_LIBRARIES(mesh angem ${Boost_LIBRARIES})
 else()
   TARGET_LINK_LIBRARIES(mesh angem uint256)

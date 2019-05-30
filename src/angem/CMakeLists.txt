@@ -29,7 +29,7 @@ TARGET_INCLUDE_DIRECTORIES(angem PRIVATE
 )
 
 
-if(Boost_FOUND)
+if(0)#Boost_FOUND)
   TARGET_LINK_LIBRARIES(angem ${Boost_LIBRARIES})
 else()
   TARGET_LINK_LIBRARIES(angem uint256)

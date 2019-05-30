@@ -8,22 +8,22 @@ IF( EXISTS "${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" )
   EXECUTE_PROCESS( COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json
     ${CMAKE_CURRENT_SOURCE_DIR}/compile_commands.json
-  )
+    )
 ENDIF()
 
 # boost is optional for 256-bit integers (for mesh library)
 # but it works muuuch faster with it
 find_package(Boost 1.65.1)
-if(Boost_FOUND)
-  message("Boost found. Using boost libraries for hashing.")
-  message("To turn off edit the CMakeLists file.")
-  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-  add_definitions(-DUSE_BOOST)
-else()
+# if(Boost_FOUND)
+#   message("Boost found. Using boost libraries for hashing.")
+#   message("To turn off edit the CMakeLists file.")
+#   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+#   add_definitions(-DUSE_BOOST)
+# else()
   # 256 bit integer lib (for mesh)
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uint256)
   ADD_SUBDIRECTORY(src/uint256)
-ENDIF()
+#ENDIF()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 find_package(METIS)
@@ -34,7 +34,6 @@ if(METIS_FOUND)
 else()
   message("-- METIS not found")
 endif()
-
 
 # angem
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/angem)
@@ -79,4 +78,4 @@ endif()
 # for profiling memory leaks
 # TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh uint256 -lstdc++fs -lasan)
 # last flag for std::filesystem
-TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh -lstdc++fs)
+TARGET_LINK_LIBRARIES(msh2gprs uint256 gprs_data parsers mesh -lstdc++fs)
