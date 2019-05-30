@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <unordered_set>
 #include <metis.h>
@@ -62,6 +63,7 @@ struct MetisData
 	MetisData& set_nvtxs(idx_t nvtxs) {
 		icount = nvtxs;
 		assert(icount); //reserve exception for more complex check
+		return *this;
 	};
 
 	MetisData& set_ndom(idx_t ndom) {
@@ -70,16 +72,14 @@ struct MetisData
 		return *this;
 	};
 
+	//exported from AD-GPRS and slightly modified
+	void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
+			const PureConnectionMap   & connection_list,
+			std::vector<std::size_t>  & coarse_cell_idx,
+			const std::size_t           n_elements = 0/*graph size*/);
 
-};
+}; // end of struct
 
-//exported from AD-GPRS and slightly modified
-void partitionConnectionList(MetisData& metisd,
-		const std::size_t           n_blocks,
-		const PureConnectionMap   & connection_list,
-		std::vector<std::size_t>  & coarse_cell_idx,
-		const std::size_t           n_elements);
-
-}  // end namespace
+};  // end namespace
 
 

@@ -108,8 +108,8 @@ class Mesh
   SurfaceMesh<double> split_faces();
 
   // Converters
-
-  MetisData * get_METIS_connections() const;
+  std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
+  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list) const;
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates

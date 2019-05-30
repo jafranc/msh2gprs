@@ -488,4 +488,40 @@ std::vector<face_iterator> Mesh::get_ordered_faces()
   return ordered_faces;
 }
 
+std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list) const
+  {
+	 MetisData md;
+	 std::vector<std::size_t> coarse_cell_idx;
+	 md.partitionConnectionList(8,
+				connection_list,
+				coarse_cell_idx);
+
+	 //for debug purpose
+	 int c=0; cout << "---------------\n----------------\n";
+	 for(const auto& v:coarse_cell_idx) cout << c++ << " " << v << endl;
+	 //end for debug purpose
+
+
+
+	 return coarse_cell_idx;
+
+  }
+
+
+std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
+
+	//get_neighbors
+	//const std::vector<std::size_t> & Mesh::get_neighbors( const FaceiVertices & face ) const
+	std::shared_ptr<PureConnectionMap> pMap = std::make_shared<PureConnectionMap>(map_faces.size());
+
+	cout << "SIZE :: " << map_faces.size() << endl;int c=0;
+	for(auto iter=map_faces.begin(); iter!=map_faces.end(); ++iter)
+	{
+		if(iter->second.neighbors.size()==2) // no border faces
+			pMap->insert_connection(iter->second.neighbors[0],iter->second.neighbors[1]);
+	}
+
+	return pMap;
 }
+
+};//end of namespace

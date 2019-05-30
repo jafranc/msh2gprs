@@ -75,12 +75,15 @@ int main(int argc, char *argv[])
   std::cout << "reading ";
   std::cout << filesystem::absolute(path_gmsh) << std::endl;
   mesh::Mesh msh;
-  Parsers::GmshReader::read_input(filesystem::absolute(path_gmsh), msh);
+  Parsers::GmshReader::read_input(filesystem::absolute(path_gmsh), msh);//TODO
   if (msh.n_cells() == 0)
   {
     std::cout << "mesh has not cells. aborting" << std::endl;
     return 0;
   }
+
+  //XXX: that's the line
+  msh.get_METIS_connections(*msh.get_fineConnectionMap());
 
   // do preprocessing
   gprs_data::SimData preprocessor = gprs_data::SimData(msh, config);

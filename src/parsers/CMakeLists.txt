@@ -14,7 +14,8 @@ ADD_LIBRARY(parsers
   JsonParser.cpp
   YamlParser.cpp
   GmshReader.cpp
-)
+  )
+
 
 SET_TARGET_PROPERTIES (
     parsers

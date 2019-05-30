@@ -9,6 +9,7 @@ ADD_LIBRARY(mesh
   face_iterator.hpp
   mesh_methods.hpp
   surface_mesh_methods.hpp
+  MetisData.hpp
   # implementation
   ShapeID.cpp
   Mesh.cpp
@@ -16,23 +17,13 @@ ADD_LIBRARY(mesh
   face_iterator.cpp
   mesh_methods.cpp
   surface_mesh_methods.cpp
+  MetisData.cpp
 )
 
 SET_TARGET_PROPERTIES (
     mesh
     PROPERTIES LINKER_LANGUAGE CXX
 )
-
-
-find_package(METIS)
-if(METIS_FOUND)
-  set(GLOBAL_INCLUDE_DIRS ${GLOBAL_INCLUDE_DIRS} ${METIS_INCLUDE_DIRS})
-  message("-- METIS found")
-  add_definitions(-DWITH_METIS)
-else()
-  message("-- METIS not found")
-endif()
-
 
 TARGET_INCLUDE_DIRECTORIES(mesh PUBLIC
 	${CMAKE_SOURCE_DIR}/src
@@ -46,5 +37,5 @@ TARGET_INCLUDE_DIRECTORIES(mesh PUBLIC
 if(0)#Boost_FOUND)
   TARGET_LINK_LIBRARIES(mesh angem ${Boost_LIBRARIES})
 else()
-  TARGET_LINK_LIBRARIES(mesh angem uint256)
+  TARGET_LINK_LIBRARIES(mesh angem uint256 ${METIS_LIBRARIES})
 endif()
