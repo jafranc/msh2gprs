@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
   //XXX: that's the block
   msh.get_METIS_connections(*msh.get_fineConnectionMap(),8);
-
+  msh.export_METIS_partitions("OUTPUT.METIS.txt");
 
   // do preprocessing
   gprs_data::SimData preprocessor = gprs_data::SimData(msh, config);

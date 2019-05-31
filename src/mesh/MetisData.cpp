@@ -108,8 +108,27 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 	}
 
 	// copy to result vector
-	coarse_cell_idx.assign(coarse_cell_id.begin(),coarse_cell_id.end());
+	coarse_cell_idx_.assign(coarse_cell_id.begin(),coarse_cell_id.end());
 
 }; //end function
+
+
+void MetisData::export_METIS_partitions(const std::string& fname)
+{
+	//for debug purpose
+		 int c=0;
+		 std::vector< std::vector<std::size_t> > part(n_domains);
+		 for(const auto& v : coarse_cell_idx_) part[v].push_back(c++);
+
+		 std::ofstream fout(fname, std::ofstream::out);
+		 for(const auto& p : part)
+		 {
+			 for(const auto& v : p) fout << v << " ";
+			 fout << endl;
+		 }
+		 fout.close();
+		 //end for debug purpose
+}
+
 
 }; // end of namespace

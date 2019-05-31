@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <unordered_set>
 #include <metis.h>
@@ -44,6 +45,9 @@ public:
 			std::vector<std::size_t>  & coarse_cell_idx,
 			const std::size_t           n_elements = 0/*graph size*/);
 
+	void export_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt");
+
+
 private :
 
 	// The number of balancing constraints. It should be at least 1
@@ -58,11 +62,6 @@ private :
 
 	/// What is actually in METIS
 	idx_t* options_ = new idx_t[METIS_NOPTIONS];
-	//default value but cou  if(METIS_ERROR_INPUT) throw metis_error_input();
-	//	  if(METIS_ERROR_MEMORY)throw metis_error_mem();
-	//	  if(METIS_ERROR) throw metis_error();ld be setConnectionMap.hpp
-
-
 	idx_t icount = 0;
 	idx_t n_domains = 0;
 
@@ -70,6 +69,8 @@ private :
 	// unset by default for now
 	//  vwgt (NULL) vsize (NULL) adjwgt (NULL)
 	// tpwgts (NULL) ubvec (NULL)
+	std::vector<std::size_t> coarse_cell_idx_;
+
 
 
 	//helpers
@@ -91,6 +92,6 @@ private :
 
 }; // end of struct
 
-};  // end namespace
+}  // end namespace
 
 
