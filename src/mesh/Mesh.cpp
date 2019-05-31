@@ -1,3 +1,5 @@
+#include <fstream>
+
 #include <Mesh.hpp>
 #include <SurfaceMesh.hpp>
 
@@ -488,20 +490,20 @@ std::vector<face_iterator> Mesh::get_ordered_faces()
   return ordered_faces;
 }
 
-std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list) const
+std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart) const
   {
 	 MetisData md;
 	 std::vector<std::size_t> coarse_cell_idx;
-	 md.partitionConnectionList(8,
+	 md.partitionConnectionList(npart,
 				connection_list,
 				coarse_cell_idx);
 
 	 //for debug purpose
 	 int c=0; cout << "---------------\n----------------\n";
-	 for(const auto& v:coarse_cell_idx) cout << c++ << " " << v << endl;
+	 std::fstream fout("dbg_metis.out",std::fstream::out);
+	 for(const auto& v:coarse_cell_idx) fout << c++ << " " << v << endl;
+	 fout.close();
 	 //end for debug purpose
-
-
 
 	 return coarse_cell_idx;
 
@@ -512,14 +514,35 @@ std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
 
 	//get_neighbors
 	//const std::vector<std::size_t> & Mesh::get_neighbors( const FaceiVertices & face ) const
-	std::shared_ptr<PureConnectionMap> pMap = std::make_shared<PureConnectionMap>(map_faces.size());
+	std::shared_ptr<PureConnectionMap> pMap = std::make_shared<PureConnectionMap>();
 
-	cout << "SIZE :: " << map_faces.size() << endl;int c=0;
-	for(auto iter=map_faces.begin(); iter!=map_faces.end(); ++iter)
+//	cout << "SIZE :: " << map_faces.size() << endl;int c=0;
+//	for(auto iter=map_faces.begin(); iter!=map_faces.end(); ++iter)
+//	{
+//		cout << c++ <<  " face: " << iter->second.index << " :: " ;
+//		for(auto v:iter->second.neighbors) cout << v << " ";
+//		cout << endl;
+//
+//		if(iter->second.neighbors.size()==2) // no border faces
+//			pMap->insert_connection(iter->second.neighbors[0],iter->second.neighbors[1]);
+//
+	//	}
+	//	cout << "total count " << c <<endl;
+
+	cout << "SIZE :: " << n_faces() << endl;int c=0;
+	for(face_iterator fit = begin_faces(); fit != end_faces(); ++fit)
 	{
-		if(iter->second.neighbors.size()==2) // no border faces
-			pMap->insert_connection(iter->second.neighbors[0],iter->second.neighbors[1]);
+		cout << c++ <<  " face: " << fit.index() << " :: "  <<
+				fit.normal()[0] << " " << fit.normal()[1] << " "  << fit.normal()[2] << " :: ";
+		for(auto v:fit.neighbors()) cout << v << " ";
+		cout << endl;
+
+		if(fit.neighbors().size()==2) // no border faces
+			pMap->insert_connection(fit.neighbors()[0],fit.neighbors()[1]);
+
 	}
+	cout << "total count " << c <<endl;
+
 
 	return pMap;
 }

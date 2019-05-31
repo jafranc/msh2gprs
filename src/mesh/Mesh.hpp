@@ -109,7 +109,7 @@ class Mesh
 
   // Converters
   std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
-  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list) const;
+  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart) const;
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates

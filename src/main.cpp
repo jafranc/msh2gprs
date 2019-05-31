@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
   }
 
   //XXX: that's the line
-  msh.get_METIS_connections(*msh.get_fineConnectionMap());
+  msh.get_METIS_connections(*msh.get_fineConnectionMap(),4);
 
   // do preprocessing
   gprs_data::SimData preprocessor = gprs_data::SimData(msh, config);
