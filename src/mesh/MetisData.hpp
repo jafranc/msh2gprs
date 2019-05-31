@@ -30,10 +30,22 @@ class metis_error : public std::exception
 	const char* what() const throw(){ return "Metis Unknown Error" ;}
 };
 
-
 //METIS input data structure
-struct MetisData
+class  MetisData
 {
+
+public:
+	MetisData() = default;
+	virtual ~MetisData(){};
+
+	//exported from AD-GPRS and slightly modified
+	void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
+			const PureConnectionMap   & connection_list,
+			std::vector<std::size_t>  & coarse_cell_idx,
+			const std::size_t           n_elements = 0/*graph size*/);
+
+private :
+
 	// The number of balancing constraints. It should be at least 1
 	idx_t ncon = 1, objval = 0;
 	// The adjacency structure of the graph
@@ -59,6 +71,8 @@ struct MetisData
 	//  vwgt (NULL) vsize (NULL) adjwgt (NULL)
 	// tpwgts (NULL) ubvec (NULL)
 
+
+	//helpers
 	//set the number of vertexes
 	MetisData& set_nvtxs(idx_t nvtxs) {
 		icount = nvtxs;
@@ -72,11 +86,8 @@ struct MetisData
 		return *this;
 	};
 
-	//exported from AD-GPRS and slightly modified
-	void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
-			const PureConnectionMap   & connection_list,
-			std::vector<std::size_t>  & coarse_cell_idx,
-			const std::size_t           n_elements = 0/*graph size*/);
+	std::size_t count_elements(const PureConnectionMap& connection_list_) const;
+	void process_CSRadjacency(const PureConnectionMap&);
 
 }; // end of struct
 

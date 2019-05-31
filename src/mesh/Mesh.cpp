@@ -516,33 +516,11 @@ std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
 	//const std::vector<std::size_t> & Mesh::get_neighbors( const FaceiVertices & face ) const
 	std::shared_ptr<PureConnectionMap> pMap = std::make_shared<PureConnectionMap>();
 
-//	cout << "SIZE :: " << map_faces.size() << endl;int c=0;
-//	for(auto iter=map_faces.begin(); iter!=map_faces.end(); ++iter)
-//	{
-//		cout << c++ <<  " face: " << iter->second.index << " :: " ;
-//		for(auto v:iter->second.neighbors) cout << v << " ";
-//		cout << endl;
-//
-//		if(iter->second.neighbors.size()==2) // no border faces
-//			pMap->insert_connection(iter->second.neighbors[0],iter->second.neighbors[1]);
-//
-	//	}
-	//	cout << "total count " << c <<endl;
-
-	cout << "SIZE :: " << n_faces() << endl;int c=0;
 	for(face_iterator fit = begin_faces(); fit != end_faces(); ++fit)
 	{
-		cout << c++ <<  " face: " << fit.index() << " :: "  <<
-				fit.normal()[0] << " " << fit.normal()[1] << " "  << fit.normal()[2] << " :: ";
-		for(auto v:fit.neighbors()) cout << v << " ";
-		cout << endl;
-
 		if(fit.neighbors().size()==2) // no border faces
 			pMap->insert_connection(fit.neighbors()[0],fit.neighbors()[1]);
-
 	}
-	cout << "total count " << c <<endl;
-
 
 	return pMap;
 }

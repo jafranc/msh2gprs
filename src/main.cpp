@@ -82,8 +82,9 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-  //XXX: that's the line
-  msh.get_METIS_connections(*msh.get_fineConnectionMap(),4);
+  //XXX: that's the block
+  msh.get_METIS_connections(*msh.get_fineConnectionMap(),8);
+
 
   // do preprocessing
   gprs_data::SimData preprocessor = gprs_data::SimData(msh, config);

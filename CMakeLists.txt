@@ -1,6 +1,9 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
+
+project(msh2gprs VERSION 1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
+include(GNUInstallDirs)
 
 # for ycmd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -13,18 +16,21 @@ ENDIF()
 
 # boost is optional for 256-bit integers (for mesh library)
 # but it works muuuch faster with it
-find_package(Boost 1.65.1)
-# if(Boost_FOUND)
-#   message("Boost found. Using boost libraries for hashing.")
-#   message("To turn off edit the CMakeLists file.")
-#   INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-#   add_definitions(-DUSE_BOOST)
-# else()
+#find_package(Boost 1.65.1)
+if(Boost_FOUND)
+  message("Boost found. Using boost libraries for hashing.")
+  message("To turn off edit the CMakeLists file.")
+  add_definitions(-DUSE_BOOST)
+  add_library(boost INTERFACE IMPORTED)
+  set_property(TARGET boost PROPERTY
+    INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+else()
   # 256 bit integer lib (for mesh)
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uint256)
   ADD_SUBDIRECTORY(src/uint256)
-#ENDIF()
+ENDIF()
 
+#metis external deps
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 find_package(METIS)
 if(METIS_FOUND)
@@ -34,6 +40,9 @@ if(METIS_FOUND)
 else()
   message("-- METIS not found")
 endif()
+
+add_library(metis INTERFACE IMPORTED)
+set_property(TARGET metis PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${METIS_INCLUDE_DIRS})
 
 # angem
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/angem)
@@ -78,4 +87,8 @@ endif()
 # for profiling memory leaks
 # TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh uint256 -lstdc++fs -lasan)
 # last flag for std::filesystem
-TARGET_LINK_LIBRARIES(msh2gprs uint256 gprs_data parsers mesh -lstdc++fs)
+if(Boost_FOUND)
+  TARGET_LINK_LIBRARIES(msh2gprs ${Boost_LIBRARIES} gprs_data parsers mesh -lstdc++fs)
+else()
+  TARGET_LINK_LIBRARIES(msh2gprs uint256 gprs_data parsers mesh -lstdc++fs)
+endif()

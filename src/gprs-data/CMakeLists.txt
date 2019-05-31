@@ -30,6 +30,7 @@ SET_TARGET_PROPERTIES (
 
 TARGET_INCLUDE_DIRECTORIES(gprs_data PUBLIC
 	${CMAKE_SOURCE_DIR}/src
-)
+  ${Boost_INCLUDE_DIR}
+  )
 
 TARGET_LINK_LIBRARIES(gprs_data angem muparser mesh)

@@ -9,28 +9,24 @@
 
 namespace mesh {
 
-void MetisData::partitionConnectionList(const std::size_t           n_blocks,
-		const PureConnectionMap   & connection_list,
-		std::vector<std::size_t>  & coarse_cell_idx,
-		const std::size_t           n_elements)
+std::size_t MetisData::count_elements(const PureConnectionMap& connection_list) const
 {
-	// size of partitioning graph
-	std::size_t n_graph_nodes = n_elements;
-	if (n_graph_nodes == 0)  // count nodes
+	std::unordered_set<std::size_t> set_elements;
+	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
 	{
-		std::unordered_set<std::size_t> set_elements;
-		for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
-		{
-			const auto elements = it.elements();
-			set_elements.insert(elements.first);
-			set_elements.insert(elements.second);
-		}
-		n_graph_nodes = set_elements.size();
+		const auto elements = it.elements();
+		set_elements.insert(elements.first);
+		set_elements.insert(elements.second);
 	}
+	return set_elements.size();
+}
 
-	// generate input: xadj (similar to row_ptr in CSR format)
-	//TODO: transfer to METIS class
-	xadj.resize(n_graph_nodes + 1);
+// generate input: xadj (similar to row_ptr in CSR format)
+// generate input: adj (similar to col_ind in CSR format)
+// TODO : try to improve const-ness
+void MetisData::process_CSRadjacency(const PureConnectionMap& connection_list)
+{
+	xadj.resize(icount + 1);
 
 	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
 	{
@@ -41,13 +37,10 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 		xadj[ib+1]++;
 	}
 
-	for(std::size_t ib = 0; ib < n_graph_nodes; ++ib)  // convert to the same ascending format as row_ptr
+	for(std::size_t ib = 0; ib < icount; ++ib)  // convert to the same ascending format as row_ptr
 		xadj[ib+1] += xadj[ib];
 
-	// generate input: adj (similar to col_ind in CSR format)
-	//TODO: transfer to METIS class
-	//TODO: at for bound check should be erased in release
-	adj.resize(xadj.at(n_graph_nodes));
+	adj.resize(xadj[icount]);
 
 	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
 	{
@@ -55,32 +48,41 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 		const int ia = elements.first;
 		const int ib = elements.second;
 		adj[xadj[ia]++] = ib;
-		// temporarily change the value of xadj for genrating adj
+		// temporarily change the value of xadj for generating adj
 		adj[xadj[ib]++] = ia;
 	}
 
 	// restore xadj
-	for(std::size_t ib = n_graph_nodes; ib != 0; --ib)
+	for(std::size_t ib = icount; ib != 0; --ib)
 		xadj[ib] = xadj[ib-1];
 	xadj[0] = 0;
 
-	// partition the entire  if(METIS_ERROR_INPUT) throw metis_error_input();
-	//	  if(METIS_ERROR_MEMORY)throw metis_error_mem();
-	//	  if(METIS_ERROR) throw metis_error(); domain: see the user manual of METIS for details
-	vwgt.resize(n_graph_nodes,1);
-	size.resize(n_graph_nodes,1);
-
-	set_nvtxs( static_cast<idx_t>(n_graph_nodes) );
+}
+void MetisData::partitionConnectionList(const std::size_t           n_blocks,
+		const PureConnectionMap & connection_list,
+		std::vector<std::size_t>& coarse_cell_idx,
+		const std::size_t           n_elements)
+{
+	// size of partitioning graph (icount) and number of partition (n_domains)
+	set_nvtxs( static_cast<idx_t>((n_elements != 0) ? n_elements : count_elements(connection_list)) );
 	set_ndom( static_cast<idx_t>(n_blocks) );
 
+	// generate input: xadj (similar to row_ptr in CSR format)
+	process_CSRadjacency(connection_list);
+
+	// partition the entire domain: see the user manual of METIS for details
+	vwgt.resize(icount,1);
+	size.resize(icount,1);
+
 	// output: the corresponding thread of each grid block (default: 0th thread)
-	vector<idx_t> coarse_cell_id(n_graph_nodes, 0);
+	vector<idx_t> coarse_cell_id(icount, 0);
 	// call METIS graph partitioner
 
 	try{
-		// main triggerx
+		// main triggers
 		METIS_SetDefaultOptions(options_);
 		options_[METIS_OPTION_NCUTS] = 8;
+
 		//// from METIS doc
 		//	  METIS_API(int) METIS_PartGraphKway(idx_t *nvtxs, idx_t *ncon,
 		//	  idx_t *xadj, idx_t *adjncy, idx_t *vwgt, idx_t *vsize,
@@ -105,13 +107,9 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 		cout << "An error occur using METIS :" << e.what() << endl;
 	}
 
-	// copy to result vector //TODO overuse of two array, overload explicit conversion function
-	coarse_cell_idx.resize(n_graph_nodes, 0);
-	int i=0;
-	std::for_each(coarse_cell_idx.begin(),coarse_cell_idx.end(),
-			[&coarse_cell_id,&i](std::size_t& szi){ szi = static_cast<std::size_t>(coarse_cell_id[i++]); });
+	// copy to result vector
+	coarse_cell_idx.assign(coarse_cell_id.begin(),coarse_cell_id.end());
+
 }; //end function
-
-
 
 }; // end of namespace
