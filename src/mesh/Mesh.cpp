@@ -490,11 +490,12 @@ std::vector<face_iterator> Mesh::get_ordered_faces()
   return ordered_faces;
 }
 
-std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart) const
+std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart)
   {
-	 MetisData md;
 	 std::vector<std::size_t> coarse_cell_idx;
-	 md.partitionConnectionList(npart,
+	 //XXX: loose constness
+	 md_ = std::make_shared<MetisData>();
+	 md_->partitionConnectionList(npart,
 				connection_list,
 				coarse_cell_idx);
 
@@ -505,9 +506,10 @@ std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   &
 	 fout.close();
 	 //end for debug purpose
 
-	 return coarse_cell_idx;
 
+	 return coarse_cell_idx;
   }
+
 
 
 std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
@@ -524,5 +526,6 @@ std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
 
 	return pMap;
 }
+
 
 };//end of namespace

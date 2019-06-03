@@ -14,7 +14,7 @@
 // standard
 #include <algorithm> // std::sort
 #include <unordered_set>
-
+#include <exception>
 
 namespace mesh
 {
@@ -107,9 +107,17 @@ class Mesh
   // cleans marked_for_split array upon completion
   SurfaceMesh<double> split_faces();
 
+  void export_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt") const
+  {
+	  if(md_)
+		  md_->export_METIS_partitions(fname);
+	  else
+		  throw std::invalid_argument("METIS Partitioning has not been done");
+  }
+
   // Converters
   std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
-  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart) const;
+  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates
@@ -117,6 +125,8 @@ class Mesh
   std::unordered_map<hash_type, Face>   map_faces;     // map face -> neighbor elements
   std::vector<int>                      shape_ids;     // vector of cell vtk indices
   std::vector<int>                      cell_markers;  // vector of cell markers
+
+  std::shared_ptr<MetisData> md_;
 
  private:
   /* split a vertex
