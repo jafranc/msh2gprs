@@ -42,11 +42,28 @@ public:
 	//exported from AD-GPRS and slightly modified
 	void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
 			const PureConnectionMap   & connection_list,
-			std::vector<std::size_t>  & coarse_cell_idx,
 			const std::size_t           n_elements = 0/*graph size*/);
 
-	void export_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt");
+	//writing METIS data partition formatted METIS like as
+	// a list of elt labels each lines standing for a different
+	// partition
+	// NB: wrap in mesh::Mesh for direct access
+	void write_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt");
 
+	//getter
+	std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
+
+	// XXX: erase in Release
+	void dbg_print_adj()
+	{
+		cout << " printing xadj :\n";
+		for(const auto& v : xadj) cout << v << " ";
+		cout <<endl;
+
+		cout << " printing adj :\n";
+		for(const auto& v : adj) cout << v << " ";
+		cout <<endl;
+	}
 
 private :
 
@@ -71,10 +88,9 @@ private :
 	// tpwgts (NULL) ubvec (NULL)
 	std::vector<std::size_t> coarse_cell_idx_;
 
-
-
 	//helpers
-	//set the number of vertexes
+
+	//setter the number of vertexes
 	MetisData& set_nvtxs(idx_t nvtxs) {
 		icount = nvtxs;
 		assert(icount); //reserve exception for more complex check
@@ -87,6 +103,7 @@ private :
 		return *this;
 	};
 
+	//TODO: replace by newly ConnectionData member function
 	std::size_t count_elements(const PureConnectionMap& connection_list_) const;
 	void process_CSRadjacency(const PureConnectionMap&);
 

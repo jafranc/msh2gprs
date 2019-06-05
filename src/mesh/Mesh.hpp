@@ -107,17 +107,18 @@ class Mesh
   // cleans marked_for_split array upon completion
   SurfaceMesh<double> split_faces();
 
-  void export_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt") const
+  //wrap access to export
+  inline void write_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt") const
   {
 	  if(md_)
-		  md_->export_METIS_partitions(fname);
+		  md_->write_METIS_partitions(fname);
 	  else
 		  throw std::invalid_argument("METIS Partitioning has not been done");
   }
 
   // Converters
   std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
-  std::vector<std::size_t> get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
+  void gen_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates
@@ -150,6 +151,7 @@ class Mesh
   // vector of faces that are markerd for split by the user via mark_for_split
   // Note: the vector is cleared after split_faces is performed
   std::vector<hash_type> marked_for_split;
+  std::shared_ptr<MetisData> md_;
 };
 
 

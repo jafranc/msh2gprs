@@ -19,6 +19,8 @@ std::size_t MetisData::count_elements(const PureConnectionMap& connection_list) 
 		set_elements.insert(elements.second);
 	}
 	return set_elements.size();
+
+	//TODO: replace by newly ConnectionData member function
 }
 
 // generate input: xadj (similar to row_ptr in CSR format)
@@ -60,7 +62,6 @@ void MetisData::process_CSRadjacency(const PureConnectionMap& connection_list)
 }
 void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 		const PureConnectionMap & connection_list,
-		std::vector<std::size_t>& coarse_cell_idx,
 		const std::size_t           n_elements)
 {
 	// size of partitioning graph (icount) and number of partition (n_domains)
@@ -112,8 +113,10 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 
 }; //end function
 
-
-void MetisData::export_METIS_partitions(const std::string& fname)
+//writing METIS data partition formatted METIS like as
+// a list of elt labels each lines standing for a different
+// partition
+void MetisData::write_METIS_partitions(const std::string& fname)
 {
 	//for debug purpose
 		 int c=0;

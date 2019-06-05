@@ -83,9 +83,11 @@ int main(int argc, char *argv[])
   }
 
   //XXX: that's the block
-  msh.get_METIS_connections(*msh.get_fineConnectionMap(),8);
-  msh.export_METIS_partitions("OUTPUT.METIS.txt");
-
+  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),8);
+  msh.write_METIS_partitions("OUTPUT.METIS.txt");
+  std::ofstream fout("OUTPUT.MCONN.txt",std::ofstream::out);
+  fout <<  *msh.gen_coarseConnectionMap();
+  fout.close();
   // do preprocessing
   gprs_data::SimData preprocessor = gprs_data::SimData(msh, config);
 

@@ -1,4 +1,8 @@
 #include <fstream>
+#include <ostream>
+#include <iterator>
+#include <numeric>
+
 
 #include <Mesh.hpp>
 #include <SurfaceMesh.hpp>
@@ -490,24 +494,13 @@ std::vector<face_iterator> Mesh::get_ordered_faces()
   return ordered_faces;
 }
 
-std::vector<std::size_t> Mesh::get_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart)
+void Mesh::gen_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart)
   {
-	 std::vector<std::size_t> coarse_cell_idx;
-	 //XXX: loose constness
 	 md_ = std::make_shared<MetisData>();
 	 md_->partitionConnectionList(npart,
-				connection_list,
-				coarse_cell_idx);
+				connection_list);
 
-	 //for debug purpose
-	 int c=0; cout << "---------------\n----------------\n";
-	 std::fstream fout("dbg_metis.out",std::fstream::out);
-	 for(const auto& v:coarse_cell_idx) fout << c++ << " " << v << endl;
-	 fout.close();
-	 //end for debug purpose
-
-
-	 return coarse_cell_idx;
+	 //md_->dbg_print_adj();
   }
 
 
