@@ -24,6 +24,7 @@ using Polyhedron = angem::Polyhedron<double>;
 using Polygon = angem::Polygon<double>;
 using FaceiVertices = std::vector<std::size_t>;
 
+using MultiConnectionMap = hash_algorithms::ConnectionMap< std::vector<std::size_t> >;
 
 /* This class implements a structure for unstructure grid storage
  * It features constant lookup and insertion times
@@ -119,6 +120,7 @@ class Mesh
   // Converters
   std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
   void gen_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
+  std::shared_ptr<MultiConnectionMap> gen_coarseConnectionMap();
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates
@@ -127,7 +129,6 @@ class Mesh
   std::vector<int>                      shape_ids;     // vector of cell vtk indices
   std::vector<int>                      cell_markers;  // vector of cell markers
 
-  std::shared_ptr<MetisData> md_;
 
  private:
   /* split a vertex

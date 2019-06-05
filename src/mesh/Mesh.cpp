@@ -520,5 +520,93 @@ std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
 	return pMap;
 }
 
+std::shared_ptr<MultiConnectionMap> Mesh::gen_coarseConnectionMap() {
+
+	std::shared_ptr<MultiConnectionMap> pMap = std::make_shared<MultiConnectionMap>();
+	int last_ix=0;
+	if(md_){
+		//TODO : define a difference_type for mesh::face::iterator in order to
+		// get std::distance(), std::advance() working
+		for(face_iterator fit = begin_faces(); fit != end_faces(); ++fit)
+		{
+			if(fit.neighbors().size()==2 &&
+					md_->getCoarseCellIdx()[fit.neighbors()[0]]!= md_->getCoarseCellIdx()[fit.neighbors()[1]] ) // no border faces
+				{
+
+				if( !pMap->connection_exists(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]) )
+					 last_ix = pMap->insert_connection(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]);
+
+				pMap->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.index());
+
+       				cout << "inserted connections  for :" << last_ix
+					 << " [ " << md_->getCoarseCellIdx()[fit.neighbors()[0]] << " "
+					 << md_->getCoarseCellIdx()[fit.neighbors()[1]] << " ]" << endl;
+				}
+		}
+	}
+	else
+		 throw std::invalid_argument("METIS Partitioning has not been done");
+
+	return pMap;
+}
+
 
 };//end of namespace
+
+//Implementation here as voluntary non-template friend (disable warning through
+// -Wnon-template-friend flag) to avoid possible instantion hack
+namespace hash_algorithms{
+std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std::size_t> >& cMap)
+{
+  //formatted print for coarse multiconnected connection maps [as METIS format]
+  // nbOfNeighVertices(NN) N1 N2 ...NN EPTR[NN+1] EIND
+
+  //buffer infos
+  std::vector< std::tuple<
+  	  std::vector<std::size_t>,std::vector<std::size_t>,std::vector<std::size_t>
+  	  > > NeighFinCon(cMap.count_elements());
+  for (auto it = cMap.begin(); it != cMap.end(); ++it)
+	{
+	  	  const auto elements = it.elements();
+	  	  //const std::vector<std::size_t> data = *it;//cMap.get_data( it.connection_index() );
+	  	  std::get<0>(NeighFinCon[elements.first]).push_back(elements.second);
+	  	  std::get<1>(NeighFinCon[elements.first]).push_back((*it).size());
+	  	  std::get<2>(NeighFinCon[elements.first]).insert(
+	  			std::get<2>(NeighFinCon[elements.first]).end(),
+				(*it).cbegin(), (*it).cend() );
+
+	  	  // redundqncy for the neighboring elt
+	  	  std::get<0>(NeighFinCon[elements.second]).push_back(elements.first);
+	  	  std::get<1>(NeighFinCon[elements.second]).push_back((*it).size());
+	  	  std::get<2>(NeighFinCon[elements.second]).insert(
+		  			std::get<2>(NeighFinCon[elements.second]).end(),
+					(*it).cbegin(), (*it).cend() );
+	}
+
+  	  //output to stream
+    for(const auto & p: NeighFinCon)
+    {
+    	// printing number of elt neighbors
+    	os << std::get<0>(p).size() << " ";
+    	// then the list of these elt neighbors
+    	std::copy(std::get<0>(p).begin(),std::get<0>(p).end(),
+    			std::ostream_iterator<int>(os," ") );
+    	// then eptr for fine linking connections
+    	os << "0 ";
+    	//browsed vector is read only through std::partial_sum()
+    	std::vector<size_t> tmp( std::get<1>(p).size() );
+    	std::partial_sum(std::get<1>(p).begin(),std::get<1>(p).end(),tmp.begin());
+    	std::copy(tmp.begin(),tmp.end(),
+    	    			std::ostream_iterator<int>(os," ") );
+    	//finally copy eind list of fine connections
+    	std::copy(std::get<2>(p).begin(),std::get<2>(p).end(),
+    	    	    			std::ostream_iterator<int>(os," ") );
+
+    	os << endl;
+    }
+
+
+
+  return os;
+}
+}

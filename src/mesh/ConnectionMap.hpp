@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <algorithm> // std::sort
 
+#include<ostream>
+#include<sstream>
 
 namespace hash_algorithms
 {
@@ -29,6 +31,7 @@ class ConnectionMap
   }
 
   const std::size_t size() const {return connections.size();}
+  const std::size_t count_elements() const;
 
   inline
   DataType & get_data(const std::size_t connection_index) {return data[connection_index];}
@@ -50,6 +53,12 @@ class ConnectionMap
                          const std::size_t jelement) const;
   // get neighbors of the connection map element
   const std::vector<std::size_t> & get_neighbors(std::size_t ielement) const;
+
+  //Implementated in user class (Mesh.cpp) as voluntary non-template friend
+  //(disable warning through -Wnon-template-friend flag) to avoid possible
+  // instantion hack
+  // XXX: to be debated
+  friend std::ostream& operator<<(std::ostream&, const ConnectionMap<DataType>& );
 
  private:
 
@@ -202,7 +211,7 @@ void ConnectionMap<DataType>::delete_element(const std::size_t element)
 }
 
 
-template <typename DataType>
+template<typename DataType>
 std::size_t ConnectionMap<DataType>::connection_index(const std::size_t ielement,
                                                       const std::size_t jelement) const
 {
@@ -275,6 +284,18 @@ ConnectionMap<DataType>::get_data(const std::size_t ielement, const std::size_t 
   return data[connection_index(ielement, jelement)];
 }
 
+template<typename DataType>
+const std::size_t ConnectionMap<DataType>::count_elements() const
+{
+	std::unordered_set<std::size_t> set_elements;
+	for (auto it = begin(); it != end(); ++it)
+	{
+		const auto elements = it.elements();
+		set_elements.insert(elements.first);
+		set_elements.insert(elements.second);
+	}
+	return set_elements.size();
+}
 
 struct empty {};
 
