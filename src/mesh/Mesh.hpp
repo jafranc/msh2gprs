@@ -15,6 +15,7 @@
 #include <algorithm> // std::sort
 #include <unordered_set>
 #include <exception>
+#include<ostream>
 
 namespace mesh
 {
@@ -67,7 +68,7 @@ class Mesh
   cell_iterator end_cells()  {return create_cell_iterator(cells.size());}
 
   // face iterators
-  // A helper funciton to create face iterators
+  // A helper function to create face iterators
   face_iterator create_face_iterator(const FaceMap::iterator & it)
   {return face_iterator(it, vertices);}
   face_iterator begin_faces(){return create_face_iterator(map_faces.begin());}
@@ -116,6 +117,9 @@ class Mesh
 	  else
 		  throw std::invalid_argument("METIS Partitioning has not been done");
   }
+
+   //output operator
+  friend std::ostream& operator<<(std::ostream& os,  Mesh& mesh);
 
   // Converters
   std::shared_ptr<PureConnectionMap> get_fineConnectionMap();

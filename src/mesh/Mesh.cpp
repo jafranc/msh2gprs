@@ -1,8 +1,6 @@
 #include <fstream>
-#include <ostream>
 #include <iterator>
 #include <numeric>
-
 
 #include <Mesh.hpp>
 #include <SurfaceMesh.hpp>
@@ -536,11 +534,12 @@ std::shared_ptr<MultiConnectionMap> Mesh::gen_coarseConnectionMap() {
 				if( !pMap->connection_exists(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]) )
 					 last_ix = pMap->insert_connection(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]);
 
+
 				pMap->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.index());
 
-       				cout << "inserted connections  for :" << last_ix
+       				/*cout << last_ix << "inserted connections  for :" << fit.index() << "/" << map_faces.size()
 					 << " [ " << md_->getCoarseCellIdx()[fit.neighbors()[0]] << " "
-					 << md_->getCoarseCellIdx()[fit.neighbors()[1]] << " ]" << endl;
+					 << md_->getCoarseCellIdx()[fit.neighbors()[1]] << " ]" << endl;*/
 				}
 		}
 	}
@@ -549,6 +548,23 @@ std::shared_ptr<MultiConnectionMap> Mesh::gen_coarseConnectionMap() {
 
 	return pMap;
 }
+
+
+//output operator
+std::ostream& operator<<(std::ostream& os,  Mesh& mesh)
+{
+	for(face_iterator fit = mesh.begin_faces(); fit != mesh.end_faces(); ++fit)
+	{
+		os << fit.index() << "  ";
+		//at least 1 neigh
+	    int is_second = (fit.neighbors().size()>1) ? fit.neighbors()[1] : -1 ;
+		os << fit.neighbors()[0] << " " << is_second ;
+		os << std::endl;
+	}
+
+		return os;
+}
+
 
 
 };//end of namespace
@@ -609,4 +625,17 @@ std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std:
 
   return os;
 }
+
+std::ostream& operator<<(std::ostream& os, const PureConnectionMap& cMap)
+{
+
+	for (auto it = cMap.begin(); it != cMap.end(); ++it)
+	{
+		const auto elements = it.elements();
+		os << cMap.connection_index(elements.first,elements.second) << " " << elements.first << " " << elements.second << std::endl;
+	}
+
+	return os;
+}
+
 }
