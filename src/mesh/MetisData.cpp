@@ -9,19 +9,19 @@
 
 namespace mesh {
 
-std::size_t MetisData::count_elements(const PureConnectionMap& connection_list) const
-{
-	std::unordered_set<std::size_t> set_elements;
-	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
-	{
-		const auto elements = it.elements();
-		set_elements.insert(elements.first);
-		set_elements.insert(elements.second);
-	}
-	return set_elements.size();
-
-	//TODO: replace by newly ConnectionData member function
-}
+//std::size_t MetisData::count_elements(const PureConnectionMap& connection_list) const
+//{
+//	std::unordered_set<std::size_t> set_elements;
+//	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
+//	{
+//		const auto elements = it.elements();
+//		set_elements.insert(elements.first);
+//		set_elements.insert(elements.second);
+//	}
+//	return set_elements.size();
+//
+//	//TODO: replace by newly ConnectionData member function
+//}
 
 // generate input: xadj (similar to row_ptr in CSR format)
 // generate input: adj (similar to col_ind in CSR format)
@@ -65,7 +65,7 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 		const std::size_t           n_elements)
 {
 	// size of partitioning graph (icount) and number of partition (n_domains)
-	set_nvtxs( static_cast<idx_t>((n_elements != 0) ? n_elements : count_elements(connection_list)) );
+	set_nvtxs( static_cast<idx_t>((n_elements != 0) ? n_elements : connection_list.count_elements() ) );
 	set_ndom( static_cast<idx_t>(n_blocks) );
 
 	// generate input: xadj (similar to row_ptr in CSR format)

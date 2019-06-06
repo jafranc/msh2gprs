@@ -104,7 +104,7 @@ private :
 	};
 
 	//TODO: replace by newly ConnectionData member function
-	std::size_t count_elements(const PureConnectionMap& connection_list_) const;
+	//std::size_t count_elements(const PureConnectionMap& connection_list_) const;
 	void process_CSRadjacency(const PureConnectionMap&);
 
 }; // end of struct
