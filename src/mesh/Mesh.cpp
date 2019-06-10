@@ -618,10 +618,10 @@ std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std:
     	std::copy(std::get<2>(p).begin(),std::get<2>(p).end(),
     	    	    			std::ostream_iterator<int>(os," ") );
 
-    	os << endl;
+    	os << "/" << endl;
     }
 
-
+    os << "/" << endl;
 
   return os;
 }
@@ -632,8 +632,9 @@ std::ostream& operator<<(std::ostream& os, const PureConnectionMap& cMap)
 	for (auto it = cMap.begin(); it != cMap.end(); ++it)
 	{
 		const auto elements = it.elements();
-		os << cMap.connection_index(elements.first,elements.second) << " " << elements.first << " " << elements.second << std::endl;
+		os << cMap.connection_index(elements.first,elements.second) << " " << elements.first << " " << elements.second << "/" << std::endl;
 	}
+  os << "/" << std::endl;
 
 	return os;
 }

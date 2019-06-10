@@ -48,7 +48,7 @@ public:
 	// a list of elt labels each lines standing for a different
 	// partition
 	// NB: wrap in mesh::Mesh for direct access
-	void write_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt");
+	void write_METIS_partitions(const std::string& fname);
 
 	//getter
 	std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
@@ -110,5 +110,3 @@ private :
 }; // end of struct
 
 }  // end namespace
-
-

@@ -110,7 +110,7 @@ class Mesh
   SurfaceMesh<double> split_faces();
 
   //wrap access to export
-  inline void write_METIS_partitions(const std::string& fname = "OUTPUT.METIS.txt") const
+  inline void write_METIS_partitions(const std::string& fname = "METIS.OUTPUT.txt") const
   {
 	  if(md_)
 		  md_->write_METIS_partitions(fname);

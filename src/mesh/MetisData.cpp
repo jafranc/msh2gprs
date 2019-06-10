@@ -123,12 +123,15 @@ void MetisData::write_METIS_partitions(const std::string& fname)
 		 std::vector< std::vector<std::size_t> > part(n_domains);
 		 for(const auto& v : coarse_cell_idx_) part[v].push_back(c++);
 
+
 		 std::ofstream fout(fname, std::ofstream::out);
-		 for(const auto& p : part)
+     fout << "METISPART" << endl;
+     for(const auto& p : part)
 		 {
 			 for(const auto& v : p) fout << v << " ";
-			 fout << endl;
+			 fout << "/" << endl;
 		 }
+     fout << "/" << endl;
 		 fout.close();
 		 //end for debug purpose
 }

@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
   }
 
   //XXX: that's the block
-  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),2);
-  msh.write_METIS_partitions("OUTPUT.METIS.txt");
-  std::ofstream fout("OUTPUT.MCONN.txt",std::ofstream::out);
+  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),8);
+  msh.write_METIS_partitions("METIS.OUTPUT.txt");
+  std::ofstream fout("MCONN.OUTPUT.txt",std::ofstream::out);
   fout <<  *msh.gen_coarseConnectionMap();
   fout.close();
   //dbg MCONN //TODO: once tested -> keep it in a test
