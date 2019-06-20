@@ -111,29 +111,43 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 	// copy to result vector
 	coarse_cell_idx_.assign(coarse_cell_id.begin(),coarse_cell_id.end());
 
+  //fill
+  //for debug purpose
+  int c=0;
+  part_.resize(n_domains);
+  for(const auto& v : coarse_cell_idx_) part_[v].push_back(c++);
+
+
 }; //end function
+
+
+
+
 
 //writing METIS data partition formatted METIS like as
 // a list of elt labels each lines standing for a different
 // partition
 void MetisData::write_METIS_partitions(const std::string& fname)
 {
-	//for debug purpose
-		 int c=0;
-		 std::vector< std::vector<std::size_t> > part(n_domains);
-		 for(const auto& v : coarse_cell_idx_) part[v].push_back(c++);
 
+  if(!part_.empty())
+    {
 
-		 std::ofstream fout(fname, std::ofstream::out);
+    std::ofstream fout(fname, std::ofstream::out);
      fout << "METISPART" << endl;
-     for(const auto& p : part)
+     for(const auto& p : part_)
 		 {
-			 for(const auto& v : p) fout << v << " ";
+			 for(const auto& v : p ) fout << v << " ";
 			 fout << "/" << endl;
 		 }
      fout << "/" << endl;
 		 fout.close();
 		 //end for debug purpose
+    }
+  else
+    throw metis_empty_error();
+
+
 }
 
 

@@ -497,11 +497,51 @@ void Mesh::gen_METIS_connections(const PureConnectionMap   & connection_list, st
 	 md_ = std::make_shared<MetisData>();
 	 md_->partitionConnectionList(npart,
 				connection_list);
-
+   reorder_list();
 	 //md_->dbg_print_adj();
   }
 
+//place the centroid fine cell first
+void Mesh::reorder_list()
+{
+  if(md_)
+    {
+      std::vector< std::vector< std::size_t> > part = md_->getPart();
 
+      std::cout << "Reordering cells ..." << std::endl;
+      //loop over partitions
+      for(auto pit= part.begin(); pit!=part.end(); ++pit)
+        {
+          Point centroids;
+          for(auto fcit = pit->begin(); fcit != pit->end(); ++fcit )
+            {
+              std::cout << *fcit << " " << get_center(*fcit) << std::endl;
+              centroids += get_center(*fcit)/pit->size();
+            }
+          md_->move_front( std::distance(part.begin(),pit),find_nearest(centroids,*pit) );
+          std::cout << "final centroids " << centroids << std::endl;
+          //exit(0);
+        }
+
+
+
+    }
+}
+
+std::size_t Mesh::find_nearest(const Point& pt, const std::vector<std::size_t>& index_set)
+{
+
+  std::vector<double> dist(index_set.size());
+
+  for(int i=0; i< dist.size(); i++)
+   dist[i] =  norm( pt - get_center(index_set[i]) ) ;
+  auto found = std::min_element(dist.begin(),dist.end());
+
+  std::cout << "nearest at" << index_set[std::distance(dist.begin(),found)] << std::endl;
+  std::cout << "w/ dist " << dist[ std::distance(dist.begin(),found) ] << std::endl;
+
+  return index_set[std::distance(dist.begin(),found)];
+}
 
 std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
 

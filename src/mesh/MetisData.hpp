@@ -17,96 +17,115 @@ using std::endl;
 
 namespace mesh
 {
-// overload std::exception for METIS
-class metis_error_input : public std::exception
-{
-	const char* what() const throw(){ return "Metis Bad Input" ; };
-};
-class metis_error_mem : public std::exception
-{
-	const char* what() const throw(){ return "Metis Bad Mem Usage" ;}
-};
-class metis_error : public std::exception
-{
-	const char* what() const throw(){ return "Metis Unknown Error" ;}
-};
+  // overload std::exception for METIS
+  class metis_error_input : public std::exception
+  {
+    const char* what() const throw(){ return "Metis Bad Input" ; };
+  };
+  class metis_error_mem : public std::exception
+  {
+    const char* what() const throw(){ return "Metis Bad Mem Usage" ;}
+  };
+  class metis_empty_error : public std::exception
+  {
+    const char* what() const throw(){ return "Metis Not runned Error" ;}
+  };
+  class metis_error : public std::exception
+  {
+    const char* what() const throw(){ return "Metis Unknown Error" ;}
+  };
 
-//METIS input data structure
-class  MetisData
-{
+  //METIS input data structure
+  class  MetisData
+  {
 
-public:
-	MetisData() = default;
-	virtual ~MetisData(){};
+  public:
+    MetisData() = default;
+    virtual ~MetisData(){};
 
-	//exported from AD-GPRS and slightly modified
-	void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
-			const PureConnectionMap   & connection_list,
-			const std::size_t           n_elements = 0/*graph size*/);
+    //exported from AD-GPRS and slightly modified
+    void partitionConnectionList(const std::size_t           n_blocks/*num of partitions*/,
+                                 const PureConnectionMap   & connection_list,
+                                 const std::size_t           n_elements = 0/*graph size*/);
 
-	//writing METIS data partition formatted METIS like as
-	// a list of elt labels each lines standing for a different
-	// partition
-	// NB: wrap in mesh::Mesh for direct access
-	void write_METIS_partitions(const std::string& fname);
+    //writing METIS data partition formatted METIS like as
+    // a list of elt labels each lines standing for a different
+    // partition
+    // NB: wrap in mesh::Mesh for direct access
+    void write_METIS_partitions(const std::string& fname);
 
-	//getter
-	std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
+    //getter
+    std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
+    std::vector< std::vector<std::size_t> > getPart() const  { return part_;};
 
-	// XXX: erase in Release
-	void dbg_print_adj()
-	{
-		cout << " printing xadj :\n";
-		for(const auto& v : xadj) cout << v << " ";
-		cout <<endl;
+    ///use to move front centroid cell label in output
+    void move_front(std::size_t coarse_cell, std::size_t index )
+    {
+      auto found = std::find(part_[coarse_cell].begin(),part_[coarse_cell].end(),index);
+      if(found != part_[coarse_cell].end())
+        {
+          std::cout << "repeating found" << *found <<std::endl;
+          part_[coarse_cell].insert(part_[coarse_cell].begin(),*found);
+          part_[coarse_cell].erase(++found);
+        }
+    }
 
-		cout << " printing adj :\n";
-		for(const auto& v : adj) cout << v << " ";
-		cout <<endl;
-	}
+    // XXX: erase in Release
+    void dbg_print_adj()
+    {
+      cout << " printing xadj :\n";
+      for(const auto& v : xadj) cout << v << " ";
+      cout <<endl;
 
-private :
+      cout << " printing adj :\n";
+      for(const auto& v : adj) cout << v << " ";
+      cout <<endl;
+    }
 
-	// The number of balancing constraints. It should be at least 1
-	idx_t ncon = 1, objval = 0;
-	// The adjacency structure of the graph
-	std::vector<idx_t> xadj, adj;
-	// The weights of the vertices as described in Section 5.5.
-	std::vector<idx_t> vwgt;
-	// The size of the vertices for computing the total communication
-	// volume as described in Section 5.7.
-	std::vector<idx_t> size;
+  private :
 
-	/// What is actually in METIS
-	idx_t* options_ = new idx_t[METIS_NOPTIONS];
-	idx_t icount = 0;
-	idx_t n_domains = 0;
+    // The number of balancing constraints. It should be at least 1
+    idx_t ncon = 1, objval = 0;
+    // The adjacency structure of the graph
+    std::vector<idx_t> xadj, adj;
+    // The weights of the vertices as described in Section 5.5.
+    std::vector<idx_t> vwgt;
+    // The size of the vertices for computing the total communication
+    // volume as described in Section 5.7.
+    std::vector<idx_t> size;
 
-	// consecutive weighting input/output args are left
-	// unset by default for now
-	//  vwgt (NULL) vsize (NULL) adjwgt (NULL)
-	// tpwgts (NULL) ubvec (NULL)
-	std::vector<std::size_t> coarse_cell_idx_;
+    /// What is actually in METIS
+    idx_t* options_ = new idx_t[METIS_NOPTIONS];
+    idx_t icount = 0;
+    idx_t n_domains = 0;
 
-	//helpers
+    // consecutive weighting input/output args are left
+    // unset by default for now
+    //  vwgt (NULL) vsize (NULL) adjwgt (NULL)
+    // tpwgts (NULL) ubvec (NULL)
+    std::vector<std::size_t> coarse_cell_idx_;//raw METIS output
+    std::vector< std::vector<std::size_t> > part_;//coarse to fine mapping (needed for ordering)
 
-	//setter the number of vertexes
-	MetisData& set_nvtxs(idx_t nvtxs) {
-		icount = nvtxs;
-		assert(icount); //reserve exception for more complex check
-		return *this;
-	};
+    //helpers
 
-	MetisData& set_ndom(idx_t ndom) {
-		n_domains = ndom;
-		assert(n_domains);
-		return *this;
-	};
+    //setter the number of vertexes
+    MetisData& set_nvtxs(idx_t nvtxs) {
+      icount = nvtxs;
+      assert(icount); //reserve exception for more complex check
+      return *this;
+    };
 
-	//TODO: replace by newly ConnectionData member function
-	//std::size_t count_elements(const PureConnectionMap& connection_list_) const;
-	void process_CSRadjacency(const PureConnectionMap&);
+    MetisData& set_ndom(idx_t ndom) {
+      n_domains = ndom;
+      assert(n_domains);
+      return *this;
+    };
 
-}; // end of struct
+
+    //TODO: replace by newly ConnectionData member function
+    //std::size_t count_elements(const PureConnectionMap& connection_list_) const;
+    void process_CSRadjacency(const PureConnectionMap&);
+
+  }; // end of struct
 
 }  // end namespace

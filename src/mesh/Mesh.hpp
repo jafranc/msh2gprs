@@ -153,6 +153,10 @@ class Mesh
   // get global indices of polygon face vertices
   std::vector<std::vector<std::size_t>> get_faces(const Polyhedron & poly) const;
 
+  void reorder_list();
+  void move_front(std::vector<std::size_t>& vec, std::size_t i);
+  std::size_t find_nearest(const Point& pt, const std::vector<std::size_t>& index_set);
+
   // vector of faces that are markerd for split by the user via mark_for_split
   // Note: the vector is cleared after split_faces is performed
   std::vector<hash_type> marked_for_split;
