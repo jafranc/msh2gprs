@@ -16,8 +16,8 @@ ENDIF()
 
 # boost is optional for 256-bit integers (for mesh library)
 # but it works muuuch faster with it
-#find_package(Boost 1.65.1)
-if(Boost_FOUND)
+find_package(Boost 1.65.1)
+if(0) #Boost_FOUND)
   message("Boost found. Using boost libraries for hashing.")
   message("To turn off edit the CMakeLists file.")
   add_definitions(-DUSE_BOOST)
@@ -29,6 +29,16 @@ else()
   INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/src/uint256)
   ADD_SUBDIRECTORY(src/uint256)
 ENDIF()
+
+#CGAL and its components (convex Hull and Delaunay)
+find_package( CGAL QUIET COMPONENTS  )
+
+if ( NOT CGAL_FOUND )
+
+  message(STATUS "This project requires the CGAL library, and will not be compiled.")
+  return()
+
+endif()
 
 #metis external deps
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)

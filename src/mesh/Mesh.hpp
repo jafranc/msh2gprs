@@ -25,7 +25,7 @@ using Polyhedron = angem::Polyhedron<double>;
 using Polygon = angem::Polygon<double>;
 using FaceiVertices = std::vector<std::size_t>;
 
-using MultiConnectionMap = hash_algorithms::ConnectionMap< std::vector<std::size_t> >;
+  using MultiConnectionMap = hash_algorithms::ConnectionMap< std::vector<std::size_t> >;
 
 /* This class implements a structure for unstructure grid storage
  * It features constant lookup and insertion times
@@ -122,9 +122,23 @@ class Mesh
   friend std::ostream& operator<<(std::ostream& os,  Mesh& mesh);
 
   // Converters
-  std::shared_ptr<PureConnectionMap> get_fineConnectionMap();
+  //TODO improve constness
+  std::shared_ptr<PureConnectionMap> get_fineConnectionMap()
+  {
+    if(fMap_==nullptr) gen_fineConnectionMap();
+    return fMap_;
+  };
+
+  std::shared_ptr<MultiConnectionMap> get_coarseConnectionMap()
+  {
+      if(cMap_==nullptr) gen_coarseConnectionMap();
+      return cMap_;
+  };
+
+  std::vector< std::vector<std::size_t> > get_cBoundary() const
+  { return cBoundary_;};
+
   void gen_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
-  std::shared_ptr<MultiConnectionMap> gen_coarseConnectionMap();
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates
@@ -154,13 +168,22 @@ class Mesh
   std::vector<std::vector<std::size_t>> get_faces(const Polyhedron & poly) const;
 
   void reorder_list();
-  void move_front(std::vector<std::size_t>& vec, std::size_t i);
+  //void move_front(std::vector<std::size_t>& vec, std::size_t i);
   std::size_t find_nearest(const Point& pt, const std::vector<std::size_t>& index_set);
+  // gen connexion maps
+  void gen_fineConnectionMap();
+  void gen_coarseConnectionMap();
+
+
+
 
   // vector of faces that are markerd for split by the user via mark_for_split
   // Note: the vector is cleared after split_faces is performed
   std::vector<hash_type> marked_for_split;
   std::shared_ptr<MetisData> md_;
+  std::shared_ptr<PureConnectionMap> fMap_;//fine connection map
+  std::shared_ptr<MultiConnectionMap> cMap_;//coarse connection
+  std::vector< std::vector<std::size_t> > cBoundary_;
 };
 
 

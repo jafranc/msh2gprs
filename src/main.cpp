@@ -82,19 +82,20 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-  //XXX: that's the block
+  //XXX: METIS/MSRSB Block
   msh.gen_METIS_connections(*msh.get_fineConnectionMap(),8);
   msh.write_METIS_partitions("METIS.OUTPUT.txt");
   std::ofstream fout("MCONN.OUTPUT.txt",std::ofstream::out);
-  fout <<  *msh.gen_coarseConnectionMap();
+  fout << *msh.get_coarseConnectionMap();
   fout.close();
   //dbg MCONN //TODO: once tested -> keep it in a test
-  fout.open("dbg_conn.txt",std::ofstream::out);
+  /* fout.open("dbg_conn.txt",std::ofstream::out);
   fout <<  *msh.get_fineConnectionMap();
   fout.close();
   fout.open("dbg_mesh_conn.txt",std::ofstream::out);
   fout <<  msh;
-  fout.close();
+  fout.close();*/
+
 
 
 

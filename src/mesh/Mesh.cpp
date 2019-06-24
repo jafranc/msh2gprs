@@ -515,7 +515,6 @@ void Mesh::reorder_list()
           Point centroids;
           for(auto fcit = pit->begin(); fcit != pit->end(); ++fcit )
             {
-              std::cout << *fcit << " " << get_center(*fcit) << std::endl;
               centroids += get_center(*fcit)/pit->size();
             }
           md_->move_front( std::distance(part.begin(),pit),find_nearest(centroids,*pit) );
@@ -537,30 +536,27 @@ std::size_t Mesh::find_nearest(const Point& pt, const std::vector<std::size_t>& 
    dist[i] =  norm( pt - get_center(index_set[i]) ) ;
   auto found = std::min_element(dist.begin(),dist.end());
 
-  std::cout << "nearest at" << index_set[std::distance(dist.begin(),found)] << std::endl;
-  std::cout << "w/ dist " << dist[ std::distance(dist.begin(),found) ] << std::endl;
-
   return index_set[std::distance(dist.begin(),found)];
 }
 
-std::shared_ptr<PureConnectionMap> Mesh::get_fineConnectionMap() {
+void Mesh::gen_fineConnectionMap(){
 
 	//get_neighbors
 	//const std::vector<std::size_t> & Mesh::get_neighbors( const FaceiVertices & face ) const
-	std::shared_ptr<PureConnectionMap> pMap = std::make_shared<PureConnectionMap>();
+	fMap_ = std::make_shared<PureConnectionMap>();
 
 	for(face_iterator fit = begin_faces(); fit != end_faces(); ++fit)
 	{
 		if(fit.neighbors().size()==2) // no border faces
-			pMap->insert_connection(fit.neighbors()[0],fit.neighbors()[1]);
+			fMap_->insert_connection(fit.neighbors()[0],fit.neighbors()[1]);
 	}
 
-	return pMap;
 }
 
-std::shared_ptr<MultiConnectionMap> Mesh::gen_coarseConnectionMap() {
+void Mesh::gen_coarseConnectionMap() {
 
-	std::shared_ptr<MultiConnectionMap> pMap = std::make_shared<MultiConnectionMap>();
+	cMap_ = std::make_shared<MultiConnectionMap>();
+  cBoundary_.resize(md_->get_ndom());
 	int last_ix=0;
 	if(md_){
 		//TODO : define a difference_type for mesh::face::iterator in order to
@@ -571,22 +567,34 @@ std::shared_ptr<MultiConnectionMap> Mesh::gen_coarseConnectionMap() {
 					md_->getCoarseCellIdx()[fit.neighbors()[0]]!= md_->getCoarseCellIdx()[fit.neighbors()[1]] ) // no border faces
 				{
 
-				if( !pMap->connection_exists(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]) )
-					 last_ix = pMap->insert_connection(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]);
+				if( !cMap_->connection_exists(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]) )
+					 cMap_->insert_connection(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]);
+
+        //store faces
+				//cMap_->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.index());
+        //store cells
+        cMap_->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.neighbors()[0]);
+        cMap_->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.neighbors()[1]);
 
 
-				pMap->get_data(md_->getCoarseCellIdx()[fit.neighbors()[0]],md_->getCoarseCellIdx()[fit.neighbors()[1]]).push_back(fit.index());
 
-       				/*cout << last_ix << "inserted connections  for :" << fit.index() << "/" << map_faces.size()
-					 << " [ " << md_->getCoarseCellIdx()[fit.neighbors()[0]] << " "
-					 << md_->getCoarseCellIdx()[fit.neighbors()[1]] << " ]" << endl;*/
-				}
+        }
+      else if(fit.neighbors().size()==1)//store boundary as -1
+        {
+          // store faces
+          //cBoundary_[md_->getCoarseCellIdx()[fit.neighbors()[0]]].push_back(fit.index());
+
+          //store cells
+          cBoundary_[md_->getCoarseCellIdx()[fit.neighbors()[0]]].push_back(fit.neighbors()[0]);
+
+        }
+
+
 		}
 	}
 	else
 		 throw std::invalid_argument("METIS Partitioning has not been done");
 
-	return pMap;
 }
 
 
@@ -612,7 +620,7 @@ std::ostream& operator<<(std::ostream& os,  Mesh& mesh)
 //Implementation here as voluntary non-template friend (disable warning through
 // -Wnon-template-friend flag) to avoid possible instantion hack
 namespace hash_algorithms{
-std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std::size_t> >& cMap)
+  std::ostream& operator<<(std::ostream& os, const ConnectionMap< std::vector<std::size_t> >& cMap)
 {
   //formatted print for coarse multiconnected connection maps [as METIS format]
   // nbOfNeighVertices(NN) N1 N2 ...NN EPTR[NN+1] EIND
@@ -624,6 +632,7 @@ std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std:
   for (auto it = cMap.begin(); it != cMap.end(); ++it)
 	{
 	  	  const auto elements = it.elements();
+
 	  	  //const std::vector<std::size_t> data = *it;//cMap.get_data( it.connection_index() );
 	  	  std::get<0>(NeighFinCon[elements.first]).push_back(elements.second);
 	  	  std::get<1>(NeighFinCon[elements.first]).push_back((*it).size());
@@ -631,12 +640,13 @@ std::ostream& operator<<(std::ostream& os, const ConnectionMap<std::vector< std:
 	  			std::get<2>(NeighFinCon[elements.first]).end(),
 				(*it).cbegin(), (*it).cend() );
 
-	  	  // redundqncy for the neighboring elt
+	  	  // redundancy for the neighboring elt
 	  	  std::get<0>(NeighFinCon[elements.second]).push_back(elements.first);
 	  	  std::get<1>(NeighFinCon[elements.second]).push_back((*it).size());
 	  	  std::get<2>(NeighFinCon[elements.second]).insert(
 		  			std::get<2>(NeighFinCon[elements.second]).end(),
 					(*it).cbegin(), (*it).cend() );
+
 	}
 
   	  //output to stream

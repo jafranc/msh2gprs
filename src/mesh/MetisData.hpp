@@ -57,6 +57,7 @@ namespace mesh
     //getter
     std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
     std::vector< std::vector<std::size_t> > getPart() const  { return part_;};
+    idx_t get_ndom() const { return n_domains;};
 
     ///use to move front centroid cell label in output
     void move_front(std::size_t coarse_cell, std::size_t index )
@@ -64,7 +65,6 @@ namespace mesh
       auto found = std::find(part_[coarse_cell].begin(),part_[coarse_cell].end(),index);
       if(found != part_[coarse_cell].end())
         {
-          std::cout << "repeating found" << *found <<std::endl;
           part_[coarse_cell].insert(part_[coarse_cell].begin(),*found);
           part_[coarse_cell].erase(++found);
         }
@@ -121,9 +121,6 @@ namespace mesh
       return *this;
     };
 
-
-    //TODO: replace by newly ConnectionData member function
-    //std::size_t count_elements(const PureConnectionMap& connection_list_) const;
     void process_CSRadjacency(const PureConnectionMap&);
 
   }; // end of struct
