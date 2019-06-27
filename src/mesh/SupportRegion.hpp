@@ -119,8 +119,13 @@ private:
   // specific treatment at boundary
   // (cf. MRST implementation)
   Point_3 extrudeBoundaryFaceCenters(std::size_t I);
-  void edgeBoundaryCenters();
+  //void edgeBoundaryCenters();
 
   //TODO specific geometric mean correction
   // void geometricMean();
+
+  //utilities
+  void move_back(std::vector<std::size_t>& mainVec, const std::vector<std::size_t>& swapped_list);
+
+
 };
