@@ -25,6 +25,6 @@ SET_TARGET_PROPERTIES (
 TARGET_INCLUDE_DIRECTORIES(parsers PUBLIC
 	${CMAKE_SOURCE_DIR}/src
 	${CMAKE_SOURCE_DIR}/src/parsers/yaml/include
-)
+  )
 
 TARGET_LINK_LIBRARIES(parsers gprs_data angem mesh yaml-cpp)

@@ -6,6 +6,8 @@
 #include <parsers/GmshReader.hpp>
 #include <mesh/Mesh.hpp>
 
+#include <mesh/SupportRegion.hpp>
+
 #include <string>
 #include <experimental/filesystem>
 
@@ -88,6 +90,15 @@ int main(int argc, char *argv[])
   std::ofstream fout("MCONN.OUTPUT.txt",std::ofstream::out);
   fout << *msh.get_coarseConnectionMap();
   fout.close();
+  /* support debug*/
+  MSRSBSupport Sup1(msh,msh.getPart());
+  Sup1.process_supports();
+
+  fout.open("support.dbug.txt");
+  fout << Sup1 << std::endl;
+  fout.close();
+
+
   //dbg MCONN //TODO: once tested -> keep it in a test
   /* fout.open("dbg_conn.txt",std::ofstream::out);
   fout <<  *msh.get_fineConnectionMap();

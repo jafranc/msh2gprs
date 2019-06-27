@@ -6,6 +6,8 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/convex_hull_3.h>
+//ref to CGAL::PMP/point_inside_example
+#include <CGAL/Side_of_triangle_mesh.h>
 
 #include <vector>
 #include <fstream>
@@ -15,12 +17,17 @@
 class SupportRegion{
 
 public:
-  SupportRegion(const Mesh* pm,
+  SupportRegion(const mesh::Mesh& mesh_m,
                 const std::vector< std::vector<std::size_t> >& p):
-    pMesh_(pm),partition_(p){};
+    partition_(p)
+  {
+    pMesh_ = std::make_shared<mesh::Mesh>(mesh_m);
+  };
+
+  virtual ~SupportRegion(){};
 
 protected:
-  std::unique_ptr<Mesh> pMesh_;
+  std::shared_ptr<mesh::Mesh> pMesh_;
   std::vector< std::vector<std::size_t> > partition_;
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
@@ -34,39 +41,84 @@ protected:
 class MSRSBSupport : public SupportRegion
 {
 public :
-  MSRSBSupport(const Mesh* pm,
-               const std::vector< std::vector<std::size_t> >& p):
-    SupportRegion(pm,p){};
+  // TODO uplift if working to Parent Class
+  typedef std::vector< std::pair<std::size_t , std::vector<std::size_t> > > Support_container;
 
+
+  MSRSBSupport(const mesh::Mesh& mesh_m,
+               const std::vector< std::vector<std::size_t> >& p):
+    SupportRegion(mesh_m,p){
+
+    gatheredPoints();
+    vSupport_.resize(p.size());
+  };
+
+  virtual ~MSRSBSupport(){};
+
+  std::vector< std::vector<Point_3> > getGathered(){ return gathered_;};
+  void process_supports()
+  {
+    for(int i=0; i<gathered_.size(); i++)
+      {
+        convexHull(gathered_[i], i);
+        genSupport(i);
+      }
+  };
+
+   friend std::ostream& operator<<(std::ostream& os, const MSRSBSupport& support)
+   {
+     for(const auto& sp: support.vSupport_ )
+       {
+        os << sp.first << " ";
+        for(auto v:sp.second)
+          os << v << " ";
+        os<<std::endl;
+      }
+
+     return os;
+   }
 
 private:
   std::vector< std::vector<Point_3> > gathered_;
+  //CGAL::object can be either Triangle_3 or Polyhedron_3
+  // for 2D and 3D case is else (Popint_3 or Segment_3)
+  // throw a bad setup
+  std::vector< CGAL::Object> vHull_;
+
+  // TODO uplift if working to Parent Class
+  Support_container vSupport_;
 
 
   //converter (maybe unused)
   std::vector<Point_3> toCGAL(const angem::PointSet<3,double>& points){
     std::vector<Point_3> ptlist;
-    for(auto it=points.begin(); it!=points.end(); ++it)
-      ptlist.push_back(*it);
+    for(auto i=0; i<points.size(); i++)
+      ptlist.push_back({points[i][0],points[i][1],points[i][2]});
 
     return ptlist;
   };
 
-  void getCentroid(const std::vector<std::size_t>& ix_list);
+  //converter (maybe unused)
+  std::vector<Point_3> toCGAL(const std::vector< angem::Point<3,double> >& points){
+    std::vector<Point_3> ptlist;
+    for(auto i=0; i<points.size(); i++)
+      ptlist.push_back(toCGAL(points[i]));
 
-  void convexHull(const std::vector<Point_3>& points){
-
-    CGAL::Object obj;
-    // compute convex hull of non-collinear points
-    CGAL::convex_hull_3(points.begin(), points.end(), obj);
-    if(const Polyhedron_3* poly = CGAL::object_cast<Polyhedron_3>(&obj))
-      std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
-
+    return ptlist;
   };
 
+  Point_3 toCGAL(const angem::Point<3,double>& pt){
+    return Point_3(pt[0],pt[1],pt[2]);}
+
+  Point_3 getCentroid(const std::vector<std::size_t>& ix_list);
+
+  void convexHull(const std::vector<Point_3>& points, int offset_);
+  void genSupport(std::size_t I);
   void gatheredPoints();
+
   // specific treatment at boundary
-  void extrudeBoundaryFaceCenters();
+  // (cf. MRST implementation)
+  Point_3 extrudeBoundaryFaceCenters(std::size_t I);
   void edgeBoundaryCenters();
 
   //TODO specific geometric mean correction
