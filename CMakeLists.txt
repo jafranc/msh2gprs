@@ -31,14 +31,15 @@ else()
 ENDIF()
 
 #CGAL and its components (convex Hull and Delaunay)
-find_package( CGAL QUIET COMPONENTS  )
+find_package( CGAL QUIET COMPONENTS Core  )
 
 if ( NOT CGAL_FOUND )
-
   message(STATUS "This project requires the CGAL library, and will not be compiled.")
   return()
-
+else()
+  message(STATUS "CGAL FOUND" ${CGAL_USE_FILE})
 endif()
+include(${CGAL_USE_FILE})
 
 #metis external deps
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
@@ -83,7 +84,7 @@ ADD_EXECUTABLE(msh2gprs ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 TARGET_INCLUDE_DIRECTORIES(msh2gprs PRIVATE
 	${CMAKE_SOURCE_DIR}/src
-)
+  )
 
 if (CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
@@ -98,7 +99,7 @@ endif()
 # TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh uint256 -lstdc++fs -lasan)
 # last flag for std::filesystem
 if(Boost_FOUND)
-  TARGET_LINK_LIBRARIES(msh2gprs ${Boost_LIBRARIES} gprs_data parsers mesh -lstdc++fs)
+  TARGET_LINK_LIBRARIES(msh2gprs ${Boost_LIBRARIES} gprs_data parsers mesh -lstdc++fs ${CGAL_3RD_PARTY_LIBRARIES} ${CGAL_LIBRARIES})
 else()
   TARGET_LINK_LIBRARIES(msh2gprs uint256 gprs_data parsers mesh -lstdc++fs)
 endif()
