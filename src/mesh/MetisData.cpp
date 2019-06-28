@@ -9,20 +9,6 @@
 
 namespace mesh {
 
-//std::size_t MetisData::count_elements(const PureConnectionMap& connection_list) const
-//{
-//	std::unordered_set<std::size_t> set_elements;
-//	for (auto it = connection_list.begin(); it != connection_list.end(); ++it)
-//	{
-//		const auto elements = it.elements();
-//		set_elements.insert(elements.first);
-//		set_elements.insert(elements.second);
-//	}
-//	return set_elements.size();
-//
-//	//TODO: replace by newly ConnectionData member function
-//}
-
 // generate input: xadj (similar to row_ptr in CSR format)
 // generate input: adj (similar to col_ind in CSR format)
 // TODO : try to improve const-ness
@@ -119,9 +105,6 @@ void MetisData::partitionConnectionList(const std::size_t           n_blocks,
 
 
 }; //end function
-
-
-
 
 
 //writing METIS data partition formatted METIS like as

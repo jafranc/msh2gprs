@@ -591,12 +591,22 @@ void Mesh::gen_coarseConnectionMap() {
 
 
 		}
+
+#ifdef NDEBUG
+    std::ofstream fout("dbg.Boundary.txt");
+    for(auto v:cBoundary_)
+      {
+        std::copy( v.begin(),v.end(),std::ostream_iterator<int>(fout," ") );
+        fout << std::endl;
+      }
+#endif
+
+
 	}
 	else
 		 throw std::invalid_argument("METIS Partitioning has not been done");
 
 }
-
 
 //output operator
 std::ostream& operator<<(std::ostream& os,  Mesh& mesh)

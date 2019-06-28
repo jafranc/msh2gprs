@@ -31,7 +31,6 @@ void MSRSBSupport::gatheredPoints()
 
         //cross add
         gathered_[element.first].push_back( toCGAL(pMesh_->get_center(partition_[element.second][0])) );
-
         gathered_[element.second].push_back( toCGAL(pMesh_->get_center(partition_[element.first][0])) );
 
 
@@ -40,17 +39,13 @@ void MSRSBSupport::gatheredPoints()
 
         gathered_[element.second].push_back( extrudeBoundaryFaceCenters(element.second) );
 
-
-
         //reach cells forming the interfaces
         //std::vector<std::size_t> celllist = *it;
         //edgeBoundaryCenters();
-
         //gathered_[element.first].push_back( toCGAL(pMesh_->get_center(partition_[element.first][0])));
         //gathered_[element.second].push_back( toCGAL(pMesh_->get_center(partition_[element.second][0])) );
         //gathered_[element.first].push_back( getCentroid( celllist ) ) ;
         //gathered_[element.second].push_back( getCentroid( celllist ) );
-
         // gathered_[element.first].push_back( extrudeBoundaryFaceCenters(element.second) );
         //gathered_[element.second].push_back( extrudeBoundaryFaceCenters(element.first) );
       }
@@ -133,46 +128,11 @@ void MSRSBSupport::genSupport(std::size_t I)
         for(auto fc : partition_[In])
           {
 
-            //searching for BC
-            //for(auto fit = vHull_[I].facets_begin(); fit != vHull_[I].facets_end();++fit)
-
-            //CGAL::Bounded_side res;
-            //res = is_inside(toCGAL(pMesh_->get_center(fc)));
-
              bool on_bounded = ( is_inside(toCGAL(pMesh_->get_center(fc)) ) == CGAL::ON_BOUNDED_SIDE || is_inside(toCGAL(pMesh_->get_center(fc)) ) == CGAL::ON_BOUNDARY );
 
               if(on_bounded) vSupport_[I].second.push_back(fc);
 
-
-
-
-            //     if(!on_bounded)
-            //
-            //     else
-            //       vSupport_[I].second.push_back(fc);
-
-            //    }//end if center is on_bounded
-            // //
-            // if(res == CGAL::ON_BOUNDED_SIDE)
-            // {
-            //   vSupport_[I].second.push_back(fc);
-            //   //std::cout << "point inside \n";
-            // }
-            // else if(res == CGAL::ON_BOUNDARY)
-            //  {
-
-            //    //std::cout << "point boundary \n";
-            //    bc.push_back(fc);
-            // }
-            //  else
-            // {
-            // std::cout << "point outside \n";
-            // }
-
-
           }//end for for loops
-
-      //This will contain the extreme vertices
 
       //post treat suuport with non neighbors test
       std::vector<std::size_t> bc;
@@ -182,24 +142,44 @@ void MSRSBSupport::genSupport(std::size_t I)
           //TODO try union find on this
           if(std::find(vSupport_[I].second.begin(),vSupport_[I].second.end(),neigh) == vSupport_[I].second.end())
             bc.push_back(fc);
-      //reorder boundary last
-      vSupport_[I].first = bc.size();
 
+      //reorder boundary last
+      //TODO: check if boundary cells and inter-coarse blocks cells cannot duplicates
+      vSupport_[I].first = 0;
       //move back bc
-      move_back(vSupport_[I].second,bc);
+      int nb = move_back(vSupport_[I].second,bc);
+      vSupport_[I].first += nb;
+      //adding current to list to spare some lines
+      for(int In=0; In < vSupport_.size(); In++ )
+        {
+          int nb = move_back(vSupport_[I].second,pMesh_->get_cBoundary()[In]);
+          vSupport_[I].first += nb;
+
+        }
+
     }//if hull non empty
 };
 
 
-
-
-void MSRSBSupport::move_back(std::vector<std::size_t>& mainVec, const std::vector<std::size_t>& swapped_list)
+//TODO check memory sanity
+//return number of swapped elmts
+std::size_t MSRSBSupport::move_back(std::vector<std::size_t>& mainVec, const std::vector<std::size_t>& swapped_list)
 {
+  std::size_t nb=0;
+  std::vector<std::size_t> found_val;
+
   for(auto val : swapped_list)
     {
-      //no fail
       auto found = std::find(mainVec.begin(),mainVec.end(),val);
-      mainVec.push_back(*found);
-      mainVec.erase(found);
+      if(found!=mainVec.end())
+        {
+          mainVec.erase(found);
+          ++nb;
+          found_val.push_back(val);
+        }
     }
+
+  mainVec.insert(mainVec.end(),found_val.begin(),found_val.end());
+
+  return nb;
 };

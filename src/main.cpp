@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
   }
 
   //XXX: METIS/MSRSB Block
-  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),8);
+  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),12);
   msh.write_METIS_partitions("METIS.OUTPUT.txt");
   std::ofstream fout("MCONN.OUTPUT.txt",std::ofstream::out);
   fout << *msh.get_coarseConnectionMap();
