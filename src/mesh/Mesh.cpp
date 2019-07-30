@@ -601,7 +601,6 @@ void Mesh::gen_coarseConnectionMap() {
       }
 #endif
 
-
 	}
 	else
 		 throw std::invalid_argument("METIS Partitioning has not been done");

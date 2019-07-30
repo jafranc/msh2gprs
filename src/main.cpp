@@ -85,16 +85,16 @@ int main(int argc, char *argv[])
   }
 
   //XXX: METIS/MSRSB Block
-  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),12);
+  msh.gen_METIS_connections(*msh.get_fineConnectionMap(),6);
   msh.write_METIS_partitions("METIS.OUTPUT.txt");
   std::ofstream fout("MCONN.OUTPUT.txt",std::ofstream::out);
   fout << *msh.get_coarseConnectionMap();
   fout.close();
   /* support debug*/
-  MSRSBSupport Sup1(msh,msh.getPart());
+  MSRSBSupport Sup1(&msh,msh.getPart());
   Sup1.process_supports();
 
-  fout.open("support.dbug.txt");
+  fout.open("MSRSB.OUTPUT.txt");
   fout << Sup1 << std::endl;
   fout.close();
 

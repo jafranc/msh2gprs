@@ -40,6 +40,7 @@ namespace mesh
   {
 
   public:
+
     MetisData() = default;
     virtual ~MetisData(){};
 
@@ -55,11 +56,12 @@ namespace mesh
     void write_METIS_partitions(const std::string& fname);
 
     //getter
-    std::vector<std::size_t> getCoarseCellIdx() const { return coarse_cell_idx_;};
-    std::vector< std::vector<std::size_t> > getPart() const  { return part_;};
+    const std::vector<std::size_t>& getCoarseCellIdx() const { return coarse_cell_idx_;};
+    const std::vector< std::vector<std::size_t> >& getPart() const  { return part_;};
     idx_t get_ndom() const { return n_domains;};
 
     ///use to move front centroid cell label in output
+    //TODO check memory sanity
     void move_front(std::size_t coarse_cell, std::size_t index )
     {
       auto found = std::find(part_[coarse_cell].begin(),part_[coarse_cell].end(),index);

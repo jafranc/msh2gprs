@@ -135,12 +135,15 @@ class Mesh
       return cMap_;
   };
 
-  std::vector< std::vector<std::size_t> > get_cBoundary() const
+  const std::vector< std::vector<std::size_t> >& get_cBoundary() const
   { return cBoundary_;};
 
   void gen_METIS_connections(const PureConnectionMap   & connection_list, std::size_t npart);
   std::vector< std::vector<std::size_t> > getPart() const
   { return (md_)? md_->getPart() :std::vector< std::vector<std::size_t> >();  };
+  std::vector<std::size_t> getCoarseCellIdx() const
+  { return (md_)? md_->getCoarseCellIdx() : std::vector<std::size_t>();  };
+
 
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates

@@ -10,8 +10,6 @@
 void MSRSBSupport::gatheredPoints()
 {
   gathered_.resize(partition_.size());
-  //for(auto pit = partition_.begin(); pit!=partition_.begin(); ++pit)
-  //  for(auto fcit = pit->begin(); fcit!= pit->begin(); ++fcit)
 
       auto cMap = pMesh_->get_coarseConnectionMap();
       for (auto it = cMap->begin(); it != cMap->end(); ++it)
@@ -27,27 +25,14 @@ void MSRSBSupport::gatheredPoints()
         for(auto elt_label:partition_[element.second])
           gathered_[element.second].push_back( toCGAL(pMesh_->get_center(elt_label)));
 
-        //add itself
-
         //cross add
         gathered_[element.first].push_back( toCGAL(pMesh_->get_center(partition_[element.second][0])) );
         gathered_[element.second].push_back( toCGAL(pMesh_->get_center(partition_[element.first][0])) );
-
 
         //now boundaries
         gathered_[element.first].push_back( extrudeBoundaryFaceCenters(element.first) );
 
         gathered_[element.second].push_back( extrudeBoundaryFaceCenters(element.second) );
-
-        //reach cells forming the interfaces
-        //std::vector<std::size_t> celllist = *it;
-        //edgeBoundaryCenters();
-        //gathered_[element.first].push_back( toCGAL(pMesh_->get_center(partition_[element.first][0])));
-        //gathered_[element.second].push_back( toCGAL(pMesh_->get_center(partition_[element.second][0])) );
-        //gathered_[element.first].push_back( getCentroid( celllist ) ) ;
-        //gathered_[element.second].push_back( getCentroid( celllist ) );
-        // gathered_[element.first].push_back( extrudeBoundaryFaceCenters(element.second) );
-        //gathered_[element.second].push_back( extrudeBoundaryFaceCenters(element.first) );
       }
 
 }
@@ -55,11 +40,16 @@ void MSRSBSupport::gatheredPoints()
 MSRSBSupport::Point_3 MSRSBSupport::extrudeBoundaryFaceCenters(std::size_t I)
 {
   auto cB = pMesh_->get_cBoundary();
-  Point_3 fc = getCentroid(cB[I]);
-  //centroids always strore first
-  Point_3 cc = toCGAL( pMesh_->get_center(partition_[I][0]) );
+    Point_3 cc = toCGAL( pMesh_->get_center(partition_[I][0]) );
+  if(!cB.empty())
+  {
+    Point_3 fc = getCentroid(cB[I]);
+    //centroids always strore first
 
   return fc+2*(fc-cc);
+  }
+  else
+    return cc;
 };
 
 // void MSRSBSupport::edgeBoundaryCenters()
@@ -110,7 +100,6 @@ void MSRSBSupport::convexHull(const std::vector<Point_3>& points, int offset_/* 
     }
 };
 
-
 void MSRSBSupport::genSupport(std::size_t I)
 {
 
@@ -119,7 +108,9 @@ void MSRSBSupport::genSupport(std::size_t I)
       //needed lamda to test
       CGAL::Side_of_triangle_mesh<Polyhedron_3,K> is_inside(*CGAL::object_cast<Polyhedron_3>(&vHull_[I]));
       //add all cells in the parition
-      vSupport_[I].second.insert( vSupport_[I].second.begin(), partition_[I].begin(),partition_[I].end());
+      std::get<0>(vSupport_[I].first) = 0;
+      std::get<1>(vSupport_[I].first) = 0;//partition_[I].size();
+      vSupport_[I].second.insert( vSupport_[I].second.end(), partition_[I].begin(),partition_[I].end());
 
       auto cMap = pMesh_->get_coarseConnectionMap();
       //check for all points in the neighbors
@@ -134,34 +125,88 @@ void MSRSBSupport::genSupport(std::size_t I)
 
           }//end for for loops
 
+      assert( vSupport_[I].second.size() > partition_[I].size() );
+
       //post treat suuport with non neighbors test
       std::vector<std::size_t> bc;
-      for(auto fc:vSupport_[I].second)
-        for(auto neigh:pMesh_->get_neighbors(fc))
-          //for all neigh if not found in subset then it is border
-          //TODO try union find on this
-          if(std::find(vSupport_[I].second.begin(),vSupport_[I].second.end(),neigh) == vSupport_[I].second.end())
-            bc.push_back(fc);
+      for(auto fcI = vSupport_[I].second.begin() ; fcI != vSupport_[I].second.end(); ++fcI)
+      {
+        for(auto neigh:pMesh_->get_neighbors(*fcI))
+          {//for all neigh if not found in subset then it is border
+            //TODO try union find on this
+            if( std::find(vSupport_[I].second.begin(),vSupport_[I].second.end(),neigh) == vSupport_[I].second.end())
+              {
+                bc.push_back(*fcI);
+                vSupport_[I].second.erase(fcI);
+                --fcI;
+                break;
+              }
+            }
+
+      }
+
+      //can be restrained to I's neighbors
+      auto fit = vSupport_[0].second.begin();
+      for(int In=0; In < vSupport_.size(); In++ )
+        {
+          for(auto v:pMesh_->get_cBoundary()[In])
+            if( (fit = std::find(vSupport_[I].second.begin(),vSupport_[I].second.end(),v))
+                != vSupport_[I].second.end() )
+              {
+                bc.push_back(*fit);
+                vSupport_[I].second.erase(fit);
+
+              }
+        }
+
+      //sort and unique border as a 3-outisde neigh cell is added three times
+      {
+        std::cout << " bc :" << bc.size() << std::endl;
+        std::sort(bc.begin(),bc.end());
+        std::vector<std::size_t>::iterator it = std::unique(bc.begin(),bc.end());
+        bc.erase(it,bc.end());
+        std::cout << " bc :" << bc.size() << std::endl;
+      }
 
       //reorder boundary last
       //TODO: check if boundary cells and inter-coarse blocks cells cannot duplicates
-      vSupport_[I].first = 0;
+
       //move back bc
-      int nb = move_back(vSupport_[I].second,bc);
-      vSupport_[I].first += nb;
+      /*int nb = move_back(vSupport_[I].second,bc);
+
+      std::get<0>(vSupport_[I].first) += nb;
+
       //adding current to list to spare some lines
       for(int In=0; In < vSupport_.size(); In++ )
         {
           int nb = move_back(vSupport_[I].second,pMesh_->get_cBoundary()[In]);
-          vSupport_[I].first += nb;
+          std::get<0>(vSupport_[I].first) += nb;
+          if(I==In)  std::get<1>(vSupport_[I].first) -=nb;
 
-        }
+        }*/
 
+      //finally sort internal with I members first
+      // and paste bc at the end
+      //
+
+      std::vector< std::size_t > metisVec = pMesh_->getCoarseCellIdx();
+
+      std::sort(vSupport_[I].second.begin(),vSupport_[I].second.end(),
+                [&I,&metisVec] (std::size_t v1, std::size_t v2)
+                { return (metisVec[v1]-I)< (metisVec[v2]-I); } // as std::size_t is unsigned should work
+                );
+
+      std::get<1>(vSupport_[I].first) =
+        std::count_if(vSupport_[I].second.begin(),vSupport_[I].second.end(),
+                    [&metisVec,&I] (std::size_t v)
+                    { return metisVec[v]==I; }
+                    );
+
+      std::get<0>(vSupport_[I].first) = bc.size();
+      vSupport_[I].second.insert(vSupport_[I].second.end(),bc.begin(),bc.end());
     }//if hull non empty
 };
 
-
-//TODO check memory sanity
 //return number of swapped elmts
 std::size_t MSRSBSupport::move_back(std::vector<std::size_t>& mainVec, const std::vector<std::size_t>& swapped_list)
 {
