@@ -10,6 +10,8 @@ ADD_LIBRARY(gprs_data
   transes.cpp
   VTKWriter.cpp
   Well.cpp
+  MultiScaleData.cpp
+  MultiScaleDataMRST.cpp
   MultiScaleDataMSRSB.cpp
   MultiScaleDataMech.cpp
   UnionFind.cpp
@@ -22,6 +24,7 @@ SET_TARGET_PROPERTIES (
 
 TARGET_INCLUDE_DIRECTORIES(gprs_data PUBLIC
   ${CMAKE_SOURCE_DIR}/src
+  ${Boost_INCLUDE_DIR}
 )
 
 set(grps_data_libs ${grps_data_libs} angem muparser mesh)

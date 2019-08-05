@@ -16,7 +16,9 @@ class MultiScaleDataMech : public MultiScaleDataMSRSB
 {
  public:
   MultiScaleDataMech(mesh::Mesh  & grid, const size_t  n_blocks);
-  virtual void build_data() override;
+  //import build_data() inherited from MSRSB base-class to explicit the overridance (and not just shadow it)
+  using MultiScaleDataMSRSB::build_data;
+  virtual void build_data();
   virtual void fill_output_model(MultiScaleOutputData & model, const int layer_index = 0) const override;
 
  protected:

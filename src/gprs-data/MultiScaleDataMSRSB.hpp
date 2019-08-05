@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mesh/Mesh.hpp"
+#include "MultiScaleData.hpp"
 #include "LayerDataMSRSB.hpp"
 #include "MultiScaleOutputData.hpp"
 #include "UnionFindWrapper.hpp"
@@ -14,7 +15,7 @@ namespace multiscale
 using std::size_t;
 using std::vector;
 
-class MultiScaleDataMSRSB
+class MultiScaleDataMSRSB : public MultiScaleData
 {
  public:
   /* Constructor.
@@ -23,25 +24,26 @@ class MultiScaleDataMSRSB
    * down the road. */
   MultiScaleDataMSRSB(mesh::Mesh  & grid, const size_t  n_blocks);
   // main method. that's when the fun happens
-  virtual void build_data();
-  virtual void fill_output_model(MultiScaleOutputData & model, const int layer_index = 0) const;
+  virtual void fill_output_model(MultiScaleOutputData & model, const int layer_index = 0) const override;
+
+
 
  protected:
   // get reference to the active layer
-  inline
-  LayerDataMSRSB & active_layer(){return layers[active_layer_index];}
-  const LayerDataMSRSB & active_layer() const {return layers[active_layer_index];}
+//  inline
+//  LayerDataMSRSB & active_layer(){return layers[active_layer_index];}
+//  const LayerDataMSRSB & active_layer() const {return layers[active_layer_index];}
 
   // call to metis to obtain partitioning
-  void build_partitioning();
+  //void build_partitioning();
   // build inverted partitioning block -> cells
-  void build_cells_in_block();
+  //void build_cells_in_block();
   // main method that identifies regions where shape functions exist
-  void build_support_regions();
+  void build_support_regions() override;
   // find geometric centers of coarse blocks
-  void find_centroids();
+ // void find_centroids();
   // build connection map that stores faces between blocks and their centers
-  void build_block_connections();
+ // void build_block_connections();
   // identify ghost blocks, find block face centroids,
   // find block edge centroids
   void build_block_face_data();
@@ -79,7 +81,7 @@ class MultiScaleDataMSRSB
       &map_block_vertices);
 
   // build support region for a block
-  void build_support_region(const std::size_t block);
+  void build_support_region(const std::size_t block) override;
 
   // mark cells that lay on the boundary of the support region
   // (intersect with the bounding shape)
@@ -97,11 +99,6 @@ class MultiScaleDataMSRSB
   // build the internal points of the block support region
   void build_support_internal_cells(const std::size_t block,
                                     const mesh::SurfaceMesh<double>& bounding_surface);
-
-  //  attributes
-  const mesh::Mesh & grid;
-  vector<LayerDataMSRSB> layers;
-  size_t active_layer_index;
 
   // debugging shit
  private:

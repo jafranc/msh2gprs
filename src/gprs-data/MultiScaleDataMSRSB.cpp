@@ -13,47 +13,10 @@ namespace multiscale {
 using Point = angem::Point<3,double>;
 using std::unordered_set;
 
-MultiScaleDataMSRSB::MultiScaleDataMSRSB(mesh::Mesh  & grid,
-                                         const size_t  n_blocks)
-    :
-    grid(grid),
-    active_layer_index(0)
-{
-  auto & layer = layers.emplace_back();
-  layer.index = 0;
-  layer.n_blocks = n_blocks;
-  layer.n_cells = grid.n_cells();
-}
-
-
-void MultiScaleDataMSRSB::build_data()
-{
-  std::cout << "building METIS partitioning...";
-  build_partitioning();
-  std::cout << "OK" << std::endl;
-
-  build_cells_in_block();
-
-  build_support_regions();
-}
-
-
-
-void MultiScaleDataMSRSB::build_partitioning()
-{
-    auto & layer = active_layer();
-    PureConnectionMap cell_connections;
-
-    for (auto it = grid.begin_faces(); it != grid.end_faces(); ++it)
-    {
-      const auto & neighbors = it.neighbors();
-      if (neighbors.size() == 2)  // not a boundary face
-        cell_connections.insert_connection( neighbors[0], neighbors[1] );
-    }
-
-    layer.partitioning = multiscale::MetisInterface<hash_algorithms::empty>
-        ::build_partitioning(cell_connections, layer.n_blocks, layer.n_cells);
-}
+MultiScaleDataMSRSB::MultiScaleDataMSRSB(mesh::Mesh  & grid, const size_t  n_blocks)
+ :
+   MultiScaleData(grid,n_blocks)
+   {}
 
 
 void MultiScaleDataMSRSB::build_support_regions()
@@ -82,61 +45,6 @@ void MultiScaleDataMSRSB::build_support_regions()
   std::cout << "OK" << std::endl;
 }
 
-
-void MultiScaleDataMSRSB::find_centroids()
-{
-  auto & layer = active_layer();
-  layer.block_centroids.resize(layer.n_blocks);
-  vector<size_t> n_cells_per_block(layer.n_blocks);
-
-  for (auto cell = grid.begin_cells(); cell != grid.end_cells(); ++cell)
-  {
-    const size_t block = layer.partitioning[cell.index()];
-    layer.block_centroids[block] += cell.center();
-    n_cells_per_block[block]++;
-  }
-
-  for (std::size_t block=0; block<layer.n_blocks; ++block)
-    layer.block_centroids[block] /= n_cells_per_block[block];
-
-  // find closest cell
-  layer.coarse_to_fine.resize(layer.n_blocks);
-  const auto max = std::numeric_limits<double>::max();
-  for (size_t block = 0; block < layer.n_blocks; ++block )
-  {
-    double min_dist = max;
-    size_t closest = 0;
-    for (const size_t cell : layer.cells_in_block[block])
-    {
-      const double current_dist = layer.block_centroids[block].distance(grid.get_center(cell));
-      if ( current_dist <= min_dist )
-      {
-        closest = cell;
-        min_dist = current_dist;
-      }
-    }
-    layer.coarse_to_fine[block] = closest;
-  }
-}
-
-
-void MultiScaleDataMSRSB::build_block_connections()
-{
-  auto & layer = active_layer();
-
-  for (auto face = grid.begin_faces(); face != grid.end_faces(); ++face)
-  {
-    const auto & neighbors = face.neighbors();
-    if (neighbors.size() == 2)  // not a boundary face
-    {
-      const std::size_t i1 = layer.partitioning[neighbors[0]];
-      const std::size_t i2 = layer.partitioning[neighbors[1]];;
-      if (i1 != i2)
-        if (!layer.block_internal_connections.connection_exists(i1, i2))
-          layer.block_internal_connections.insert_connection(i1, i2);
-    }
-  }
-}
 
 void MultiScaleDataMSRSB::build_block_face_data()
 {
@@ -706,15 +614,6 @@ void MultiScaleDataMSRSB::fill_output_model(MultiScaleOutputData & model,
   //   // }
   //   // std::cout << std::endl;
   // }
-}
-
-
-void MultiScaleDataMSRSB::build_cells_in_block()
-{
-  auto & layer = active_layer();
-  layer.cells_in_block.resize(layer.n_blocks);
-  for (std::size_t cell=0; cell<layer.n_cells; ++cell)
-    layer.cells_in_block[layer.partitioning[cell]].push_back(cell);
 }
 
 
