@@ -1,5 +1,6 @@
 #include <Mesh.hpp>
 #include <SurfaceMesh.hpp>
+#include <numeric>
 
 #include "angem/PolyhedronFactory.hpp"
 
@@ -544,5 +545,31 @@ const std::vector<std::size_t> & Mesh::get_vertices(const std::size_t cell) cons
 {
   return cells[cell];
 }
+
+std::size_t Mesh::findNearest(const Point& pt, const std::vector<std::size_t>& index_set ) const
+{
+	 // if default version consider the whole mesh
+	 std::vector<std::size_t> processed_set(index_set);
+	 if(processed_set.empty())
+	 {
+		 processed_set.resize(cells.size());
+		 std::iota(processed_set.begin(),processed_set.end(),0);
+	 }
+
+	  // then find index of the closest cell to the pt
+	  double dist = std::numeric_limits<double>::max();
+	  std::size_t closest = 0;
+
+	  for(int i=0; i< processed_set.size(); i++)
+		  {
+		  	  closest = ( dist > pt.distance(get_center(processed_set[i])) ) ? i : closest;
+		  	  dist = std::min(dist, pt.distance(get_center(processed_set[i])) );
+		  }
+
+
+
+	  return index_set[closest];
+}
+
 
 }

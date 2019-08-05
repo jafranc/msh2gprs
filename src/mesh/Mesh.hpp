@@ -141,6 +141,10 @@ class Mesh
   // cleans marked_for_split array upon completion
   SurfaceMesh<double> split_faces();
 
+  //find nearest cell from the coordinate
+  std::size_t findNearest(const Point& pt,const std::vector<std::size_t>& index_set = std::vector<std::size_t>()) const;
+
+
   // ATTRIBUTES
   angem::PointSet<3,double>             vertices;      // vector of vertex coordinates
   std::vector<std::vector<std::size_t>> cells;         // vertex indices
