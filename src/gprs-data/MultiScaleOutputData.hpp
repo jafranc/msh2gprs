@@ -19,6 +19,8 @@ struct MultiScaleOutputData
   // cells that dconstitute the internals of each support region
   // this includes the cells inside the coarse block
   std::vector<std::unordered_set<std::size_t>> support_internal;
+  //cells that are present in several support region
+  std::vector<std::unordered_set<std::size_t>> support_overlap;
 };
 
 }

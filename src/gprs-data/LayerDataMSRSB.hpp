@@ -44,6 +44,7 @@ struct LayerDataMSRSB
   // support region data
   std::vector<std::unordered_set<std::size_t>> support_boundary;
   std::vector<std::unordered_set<std::size_t>> support_internal;
+  std::vector<std::unordered_set<std::size_t>> support_overlap;
   // centroid to a vertex or cell
   std::vector<std::size_t> coarse_to_fine;
 };
