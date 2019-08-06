@@ -70,7 +70,7 @@ void MultiScaleDataMRST::convexHull(const std::vector<Point_3>& points,const std
 		//  || const Triangle_3* t = CGAL::object_cast<Triangle_3>(&obj) ) //TODO implement 2D
 	{
 		vHull_[block] = obj;
-		std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
+		//std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
 	}
 	else
 	{
@@ -144,28 +144,29 @@ void MultiScaleDataMRST::support_region_impl_(const std::size_t block)
 {
 	//CGAL returned lambda for the ray casting test
 	CGAL::Side_of_triangle_mesh<Polyhedron_3,K> is_inside(*CGAL::object_cast<Polyhedron_3>(&vHull_[block]));
-	//start adding to the interior all the METIS partition points
-	for(auto cell = active_layer().cells_in_block[block].begin();
-			cell != active_layer().cells_in_block[block].end();
-			++cell )
-		active_layer().support_internal[block].insert(*cell);
 
-	auto& cMap = active_layer().block_internal_connections;//grid.get_coarseConnectionMap();
-	//check for all points in the neighbors
-	vector<std::size_t> neighs = cMap.get_neighbors(block);
+	auto& cMap = active_layer().block_internal_connections;
+
 	vector<std::size_t>  vSupport;
+
+	//start adding to the interior all the METIS partition points
+	vSupport.insert(vSupport.begin(),
+			active_layer().cells_in_block[block].begin(),active_layer().cells_in_block[block].end());
+	//then testing if inside convex hull
+	vector<std::size_t> neighs = cMap.get_neighbors(block);
 	for(auto blockn : neighs)
 		for(auto fc : active_layer().cells_in_block[blockn])
 		{
 			bool on_bounded = ( is_inside(toCGAL(grid.get_center(fc)) ) == CGAL::ON_BOUNDED_SIDE ||
 					is_inside(toCGAL(grid.get_center(fc)) ) == CGAL::ON_BOUNDARY  );
+
 			if(on_bounded) vSupport.push_back(fc);
 
 		}//end for for loops
 
 	assert( vSupport.size() > active_layer().cells_in_block[block].size() );
 
-	//post treat suuport with non neighbors test
+	//post treat support with non neighbors test
 	for(auto fcI = vSupport.begin() ; fcI != vSupport.end(); ++fcI)
 	{
 		std::vector<std::size_t> mneigh = grid.get_neighbors(*fcI);
@@ -176,6 +177,7 @@ void MultiScaleDataMRST::support_region_impl_(const std::size_t block)
 			== vSupport.end())
 			{
 				active_layer().support_boundary[block].insert(neigh);
+				assert( active_layer().partitioning[neigh] != block );
 			}
 		}
 
@@ -213,7 +215,6 @@ void MultiScaleDataMRST::printFiles() const
 	ofs.close();
 
 	//MCONN.OUTPUT.txt
-
 	ofs.open("MCONN.OUTPUT.txt");
 	ofs << "METISCONN" << std::endl;
 	auto& cMap = active_layer().block_internal_connections;//grid.get_coarseConnectionMap();
@@ -243,6 +244,7 @@ void MultiScaleDataMRST::printFiles() const
 	{
 		ofs << active_layer().support_boundary[block].size() << " "
 			<< active_layer().support_internal[block].size() << " ";
+			//<< active_layer().support_overlap[block].size() << " ";
 
 		std::copy(active_layer().support_internal[block].begin(),
 				  active_layer().support_internal[block].end(),
