@@ -82,6 +82,7 @@ void MultiScaleData::find_centroids()
 {
 	auto & layer = active_layer();
 	layer.block_centroids.resize(layer.n_blocks);
+	layer.coarse_to_fine.resize(layer.n_blocks);
 
 	if(!layer.cells_in_block.empty())
 	{
@@ -90,10 +91,10 @@ void MultiScaleData::find_centroids()
 			Point centroids;
 			std::size_t block_ix = std::distance(layer.cells_in_block.begin(),block_it);
 			for(auto cell = block_it->begin(); cell != block_it->end(); ++cell )
-				centroids += grid.get_center(*cell)/block_it->size();
+				layer.block_centroids[block_ix] += grid.get_center(*cell)/block_it->size();
 
 			//store centroids in layer
-			layer.coarse_to_fine[block_ix] = grid.findNearest(centroids);
+			layer.coarse_to_fine[block_ix] = grid.findNearest(layer.block_centroids[block_ix]);
 			//place centroids cells label at the start of partition list
 			auto found = std::find(layer.cells_in_block[block_ix].begin(),layer.cells_in_block[block_ix].end(),layer.coarse_to_fine[block_ix]);
 			if(found != layer.cells_in_block[block_ix].end())
