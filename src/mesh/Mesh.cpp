@@ -566,9 +566,7 @@ std::size_t Mesh::findNearest(const Point& pt, const std::vector<std::size_t>& i
 		  	  dist = std::min(dist, pt.distance(get_center(processed_set[i])) );
 		  }
 
-
-
-	  return index_set[closest];
+	  return processed_set[closest];
 }
 
 
