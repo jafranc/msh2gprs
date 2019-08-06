@@ -14,6 +14,7 @@
 #include "muparser/muParser.h"
 #include "MultiScaleDataMSRSB.hpp"
 #include "MultiScaleDataMech.hpp"
+#include "MultiScaleDataMRST.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -1937,7 +1938,12 @@ void SimData::build_multiscale_data()
   {
     if (config.multiscale_flow == method_mrst_flow)
     {
-      throw std::invalid_argument("Jaques' code aint merged yet");
+      //throw std::invalid_argument("Jaques' code aint merged yet");
+    	multiscale::MultiScaleDataMRST ms_handler(grid, config.n_multiscale_blocks);
+    	ms_handler.build_data();
+    	ms_handler.fill_output_model(ms_flow_data);
+    	ms_handler.printFiles();
+
     }
     else if (config.multiscale_flow == method_msrsb)  // poor option
     {

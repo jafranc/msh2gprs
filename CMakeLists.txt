@@ -15,7 +15,8 @@ ENDIF()
 
 # boost is optional for 256-bit integers (for mesh library)
 # but it works muuuch faster with it
-find_package(Boost 1.65.1)
+find_package(Boost 1.65.1 REQUIRED)
+message(STATUS,"FOUND " ${Boost_INCLUDE_DIRS})
 if(Boost_FOUND)
   message("Boost found. Using boost libraries for hashing.")
   message("To turn off edit the CMakeLists file.")
@@ -36,6 +37,17 @@ if(METIS_FOUND)
 else()
   message("-- METIS not found")
 endif()
+
+#CGAL
+find_package( CGAL QUIET COMPONENTS Core  )
+
+if ( NOT CGAL_FOUND )
+  message(STATUS "This project requires the CGAL library, and will not be compiled.")
+  return()
+else()
+  message(STATUS "CGAL FOUND" ${CGAL_USE_FILE})
+endif()
+include(${CGAL_USE_FILE})
 
 
 # angem
@@ -81,4 +93,4 @@ endif()
 # for profiling memory leaks
 # TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh uint256 -lstdc++fs -lasan)
 # last flag for std::filesystem
-TARGET_LINK_LIBRARIES(msh2gprs gprs_data parsers mesh -lstdc++fs)
+TARGET_LINK_LIBRARIES(msh2gprs  ${Boost_LIBRARIES} gprs_data parsers mesh -lstdc++fs)
