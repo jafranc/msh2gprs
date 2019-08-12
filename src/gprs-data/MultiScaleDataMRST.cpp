@@ -61,16 +61,110 @@ void MultiScaleDataMRST::build_support_region(const std::size_t block)
 	}
 }
 
-void MultiScaleDataMRST::convexHull(const std::vector<Point_3>& points,const std::size_t block)
+void MultiScaleDataMRST::is2D_(std::vector<Point_3>& points)
+{
+	std::vector<double> x_,y_,z_;
+	double rangex, rangey, rangez;
+
+	for(auto pt:points)
+	{
+		x_.push_back(pt[0]);
+		y_.push_back(pt[1]);
+		z_.push_back(pt[2]);
+	}
+
+	std::vector<double>::iterator min, max;
+	std::tie(min,max) = std::minmax_element(x_.begin(),x_.end());
+	rangex = *max -*min;
+	std::tie(min,max) = std::minmax_element(y_.begin(),y_.end());
+	rangey = *max -*min;
+	std::tie(min,max) = std::minmax_element(z_.begin(),z_.end());
+	rangez = *max -*min;
+
+	std::vector<double> ranges = {rangex,rangey,rangez};
+	std::vector<std::size_t> sorted_ix = {0,1,2};
+	//increasing inderected sort
+	std::sort(sorted_ix.begin(),sorted_ix.end(),
+			[&ranges](std::size_t i0, std::size_t i1){ return ranges[i0]>ranges[i1];});
+
+	Vector_3 dl(0,0,0);
+	switch(sorted_ix[2])
+	{
+	case 0:
+		dl += Vector_3(ranges[sorted_ix[0]],0,0);
+		break;
+	case 1:
+		dl += Vector_3(0,ranges[sorted_ix[0]],0);
+		break;
+	case 2:
+		dl += Vector_3(0,0,ranges[sorted_ix[0]]);
+		break;
+	default:
+		break;
+	}
+
+	std::cout << " Mesh can be considered 2D ... \n ranges: ";
+		std::copy(ranges.begin(),ranges.end(),std::ostream_iterator<double>(std::cout," "));
+
+		//TODO find a better criteria for 2D caracteriation
+		//XXX work only if only one cells in z direction
+		bool is2D = ranges[sorted_ix[2]] == 0 ;
+
+	if(is2D)
+	{
+
+		std::cout << std::endl << ranges[sorted_ix[0]] << std::endl;
+		std::cout << sorted_ix[2] << std::endl << dl << std::endl;
+
+		int sz = x_.size();
+		x_.insert(x_.end(),x_.begin(),x_.end());
+		y_.insert(y_.end(),y_.begin(),y_.end());
+		z_.insert(z_.end(),z_.begin(),z_.end());
+		int i=0;
+
+		switch(sorted_ix[2])
+		{
+		case 0:
+			std::for_each(x_.begin(),x_.end(),[&sz,&i,&ranges,&sorted_ix](double& d){ d = (i++<sz) ? d+ranges[sorted_ix[0]] : d-ranges[sorted_ix[0]]; });
+			break;
+		case 1:
+			std::for_each(y_.begin(),y_.end(),[&sz,&i,&ranges,&sorted_ix](double& d){ d = (i++<sz) ? d+ranges[sorted_ix[0]] : d-ranges[sorted_ix[0]]; });
+			break;
+		case 2:
+			std::for_each(z_.begin(),z_.end(),[&sz,&i,&ranges,&sorted_ix](double& d){ d = (i++<sz) ? d+ranges[sorted_ix[0]] : d-ranges[sorted_ix[0]]; });
+			break;
+
+		default:
+			break;
+		}
+
+
+		//reproduce points
+		points.clear();
+		for(int i=0; i<x_.size(); ++i)
+			points.push_back( Point_3(x_[i],y_[i],z_[i]) );
+
+	}
+
+}
+
+void MultiScaleDataMRST::convexHull(std::vector<Point_3>& points,const std::size_t block)
 {
 	CGAL::Object obj;
+	is2D_(points);
+
+
 	// compute convex hull of non-collinear points
 	CGAL::convex_hull_3(points.begin(), points.end(), obj);
 	if(const Polyhedron_3* poly = CGAL::object_cast<Polyhedron_3>(&obj) )
-		//  || const Triangle_3* t = CGAL::object_cast<Triangle_3>(&obj) ) //TODO implement 2D
 	{
 		vHull_[block] = obj;
 		//std::cout << "The convex hull contains " << poly->size_of_vertices() << " vertices" << std::endl;
+
+		   //part for dbg
+		      std::ofstream fout("part"+std::to_string(block)+".off",std::ofstream::out);
+		      fout << *poly << std::endl;
+		      fout.close();
 	}
 	else
 	{
@@ -79,7 +173,7 @@ void MultiScaleDataMRST::convexHull(const std::vector<Point_3>& points,const std
 		else if(const Point_3* p = CGAL::object_cast<Point_3>(&obj))
 			std::cerr << "Point Hull "<<std::endl;
 		else if(const Triangle_3* p = CGAL::object_cast<Triangle_3>(&obj))
-			std::cerr << "2D triangle Hull (to debug pending)" << std::endl; //TODO implement 2D
+			std::cerr << "Planar hull" << std::endl;
 
 		throw std::invalid_argument("Bad Value for Hull");
 
@@ -90,7 +184,7 @@ void MultiScaleDataMRST::gatheredPoints()
 {
 	gathered_.resize(active_layer().cells_in_block.size());
 
-	auto cMap = active_layer().block_internal_connections;//grid.get_coarseConnectionMap();
+	auto cMap = active_layer().block_internal_connections;
 	for (auto it = cMap.begin(); it != cMap.end(); ++it)
 	{
 
@@ -103,14 +197,20 @@ void MultiScaleDataMRST::gatheredPoints()
 		for(auto elt_label:active_layer().cells_in_block[element.second])
 			gathered_[element.second].push_back( toCGAL(grid.get_center(elt_label)));
 
-		//cross add neighbors center
-		gathered_[element.first].push_back( toCGAL(grid.get_center(active_layer().cells_in_block[element.second][0])) );
-		gathered_[element.second].push_back( toCGAL(grid.get_center(active_layer().cells_in_block[element.first][0])) );
+		// alt. use layer.coarse_to_fine
+//		gathered_[element.first].push_back( toCGAL(grid.get_center( active_layer().coarse_to_fine[element.second] )) );
+//		gathered_[element.second].push_back( toCGAL(grid.get_center( active_layer().coarse_to_fine[element.first] )) );
+//		gathered_[element.first].push_back( toCGAL(grid.get_center( active_layer().coarse_to_fine[element.first] )) );
+//		gathered_[element.second].push_back( toCGAL(grid.get_center( active_layer().coarse_to_fine[element.second] )) );
+		// alt. using layer.block_centroids
+		gathered_[element.first].push_back( toCGAL(active_layer().block_centroids[element.second]) );
+		gathered_[element.second].push_back( toCGAL(active_layer().block_centroids[element.first]) );
+		gathered_[element.first].push_back( toCGAL(active_layer().block_centroids[element.first]) );
+		gathered_[element.second].push_back( toCGAL(active_layer().block_centroids[element.second]) );
 
-		//now boundaries (uncomment if needed)
-		//gathered_[element.first].push_back( extrudeBoundaryFaceCenters(element.first) );
-		//gathered_[element.second].push_back( extrudeBoundaryFaceCenters(element.second) );
 	}
+
+
 
 }
 
@@ -195,7 +295,7 @@ void MultiScaleDataMRST::support_region_impl_(const std::size_t block)
 
 }
 
-
+// [deprecated] To check with my implemetation of AD-GPRS
 //output operator for debug and temp solution export to gprs
 void MultiScaleDataMRST::printFiles() const
 {

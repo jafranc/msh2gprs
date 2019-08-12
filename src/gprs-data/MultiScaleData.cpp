@@ -95,13 +95,7 @@ void MultiScaleData::find_centroids()
 
 			//store centroids in layer
 			layer.coarse_to_fine[block_ix] = grid.findNearest(layer.block_centroids[block_ix]);
-			//place centroids cells label at the start of partition list
-			auto found = std::find(layer.cells_in_block[block_ix].begin(),layer.cells_in_block[block_ix].end(),layer.coarse_to_fine[block_ix]);
-			if(found != layer.cells_in_block[block_ix].end())
-			{
-				layer.cells_in_block[block_ix].insert(layer.cells_in_block[block_ix].begin(),*found);
-				layer.cells_in_block[block_ix].erase(++found);
-			}
+
 		}
 
 	}

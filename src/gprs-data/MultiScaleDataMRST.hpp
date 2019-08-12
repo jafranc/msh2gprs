@@ -35,6 +35,8 @@ class MultiScaleDataMRST : public MultiScaleData
   virtual void fill_output_model(MultiScaleOutputData & model, const int layer_index = 0) const;
 
   //gathered points of interest for convex hull computation
+  // new point of interest can be added there to change algo
+  // (e.g face projection of centroids)
   virtual void gatheredPoints();
 
   void printFiles() const;
@@ -44,6 +46,7 @@ class MultiScaleDataMRST : public MultiScaleData
   typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
   typedef CGAL::Polyhedron_3<K>                     Polyhedron_3;
   typedef K::Point_3                                Point_3;
+  typedef K::Vector_3                                Vector_3;
   typedef K::Segment_3                              Segment_3;
   typedef K::Triangle_3                             Triangle_3;
 
@@ -59,7 +62,7 @@ class MultiScaleDataMRST : public MultiScaleData
   // Compute convexHull object from list of points thanks to CGAL implementation
   //and store it at vHull_[block]
   //TODO reimplenent 3D-Hull (apart from CGAL)
-  void convexHull(const std::vector<Point_3>& points,const std::size_t block);
+  void convexHull(std::vector<Point_3>& points,const std::size_t block);
   //converter
   //TODO if CGAL kept turn into implicit conversion op
   inline  Point_3 toCGAL(const angem::Point<3,double>& pt)
@@ -69,6 +72,7 @@ class MultiScaleDataMRST : public MultiScaleData
 
   //seperated implementation for build support region
   void support_region_impl_(const std::size_t block);
+  void is2D_(std::vector<Point_3>& points);
 
 };
 
