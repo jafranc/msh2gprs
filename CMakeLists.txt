@@ -123,10 +123,12 @@ else()
 endif()
 
 # libraries for linking
-set(msh2gprs_libs ${msh2gprs_libs} preprocessor yaml-cpp mesh -lstdc++fs)
+set(msh2gprs_libs ${msh2gprs_libs} preprocessor yaml-cpp mesh)
 
+if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+	set(msh2gprs_libs ${msh2gprs_libs} stdc++fs)
+endif()
 TARGET_LINK_LIBRARIES(msh2gprs ${msh2gprs_libs})
-
 
 enable_testing()
 add_subdirectory(tests)
