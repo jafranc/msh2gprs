@@ -677,6 +677,20 @@ void YamlParser::section_mesh(const YAML::Node & node)
     {
       subsection_refinement(it->second);
     }
+    else if (key == "swap-z")
+    {
+      auto val = it->second.as< std::string >();
+
+      if ( val == "x" )
+        conf.swap_z = 1;
+      else if ( val == "y" )
+        conf.swap_z = 2;
+      else
+        throw std::invalid_argument("Unknown dir " + val);
+
+    }
+    
+    
     else throw std::invalid_argument("Unknown key " + key);
   }
 }

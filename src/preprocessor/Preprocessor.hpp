@@ -44,7 +44,8 @@ private:
   // create grid
   void setup_grid_(const Path config_dir_path);
   // read .msh or .vtk grid file
-  void read_mesh_file_(const Path mesh_file_path);
+  void read_mesh_file_( const Path mesh_file_path,
+                        size_t swap_z );
   // create an output directory. If it already exists, cleans it first.
   // WARNING: this can destroy your files.
   void create_output_dir_();

@@ -24,4 +24,5 @@ struct MeshConfig
   std::string file;
   mesh::CartesianMeshParameters cartesian;
   RefinementParameters refinement;
+  size_t swap_z = 0;
 };

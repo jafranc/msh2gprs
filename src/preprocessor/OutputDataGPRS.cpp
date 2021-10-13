@@ -102,8 +102,10 @@ void OutputDataGPRS::save_control_volume_data_(std::ofstream & out) const
 
   ///// OUTPUT Depth  /////
   out << "DEPTH" << std::endl;
+  auto highest_pt = std::numeric_limits<double_t>::min();
+  std::for_each(cvs.cbegin(), cvs.cend(),[&highest_pt](auto const& cv){ highest_pt = std::max(highest_pt, cv.center(2));});
   for (const auto & cv : cvs)
-    out << -cv.center(2) << std::endl;
+    out << highest_pt - cv.center(2) << std::endl;
   out << "/" << std::endl << std::endl;
 
   // additional data (if any)

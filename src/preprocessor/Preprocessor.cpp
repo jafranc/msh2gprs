@@ -45,7 +45,7 @@ void Preprocessor::setup_grid_(const Path config_dir_path)
   if (config.mesh_config.type == MeshType::file)
   {
     const Path grid_file_path = config_dir_path / config.mesh_config.file;
-    read_mesh_file_(grid_file_path);
+    read_mesh_file_( grid_file_path, config.mesh_config.swap_z );
   }
   else if (config.mesh_config.type == MeshType::cartesian)
   {
@@ -198,7 +198,7 @@ void Preprocessor::read_config_file_(const Path config_file_path)
   }
 }
 
-void Preprocessor::read_mesh_file_(const Path mesh_file_path)
+void Preprocessor::read_mesh_file_( const Path mesh_file_path, size_t swap_z )
 {
   if (!filesystem::exists(mesh_file_path))
   {
@@ -233,6 +233,26 @@ void Preprocessor::read_mesh_file_(const Path mesh_file_path)
     }
   }
   else throw std::invalid_argument("Only .msh files produced by Gmsh are supported");
+
+  switch( swap_z )
+  {
+    case 0:
+      break;
+    case 1:
+      std::for_each( data.grid.vertices().begin(), data.grid.vertices().end(),
+                      [](auto pt){ std::swap(pt.x(),pt.z()); } );
+      break;
+    case 2:
+      std::for_each( data.grid.vertices().begin(), data.grid.vertices().end(),
+                     [](auto& pt){ std::swap(pt.y(),pt.z()); } );
+      break;
+
+    default:
+      throw std::invalid_argument("invalid swap arg");
+  }
+
+
+
 }
 
 void Preprocessor::build_flow_discretization_()
