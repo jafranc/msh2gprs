@@ -190,6 +190,10 @@ class Mesh
   // coarsen cells split built by split_cell method and restore active cells
   void coarsen_cells();
 
+  // setting swap_z
+  inline void set_swap_z( size_t swap_z_ ) { swap_z = swap_z_; };
+  inline size_t get_swap_z() const{ return swap_z;}
+
  protected:
   void validate_vertex_(size_t v) const;
   // find edge neighboring cells
@@ -253,6 +257,10 @@ class Mesh
 
  private:
   size_t _n_inactive_cells;  //
+
+  size_t swap_z = 0;
+
+private:
 
   friend class Subdivision;
   friend class FaceSplitter;

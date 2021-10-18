@@ -234,6 +234,7 @@ void Preprocessor::read_mesh_file_( const Path mesh_file_path, size_t swap_z )
   }
   else throw std::invalid_argument("Only .msh files produced by Gmsh are supported");
 
+  data.grid.set_swap_z(swap_z);
   switch( swap_z )
   {
     case 0:

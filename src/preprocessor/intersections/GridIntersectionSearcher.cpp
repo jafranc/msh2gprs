@@ -11,12 +11,16 @@ GridIntersectionSearcher::GridIntersectionSearcher(const mesh::Mesh & grid)
 
 double GridIntersectionSearcher::top() const noexcept
 {
-  return get_highest_bound_(2);
+  size_t dir = (_grid.get_swap_z() == 2 ? 1 : ( _grid.get_swap_z() == 1 ? 3 : 0));
+
+  return get_highest_bound_(dir);
 }
 
 double GridIntersectionSearcher::bottom() const noexcept
 {
-  return get_lowest_bound_(2);
+  size_t dir = (_grid.get_swap_z() == 2 ? 1 : ( _grid.get_swap_z() == 1 ? 3 : 0));
+
+  return get_lowest_bound_(dir);
 }
 
 double GridIntersectionSearcher::get_lowest_bound_(const size_t direction) const
