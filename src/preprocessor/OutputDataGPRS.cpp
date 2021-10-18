@@ -533,7 +533,7 @@ void OutputDataGPRS::saveWells(const std::string file_name) const
     for (const auto & segment : well.segment_data)
     {
       out << well.name << "\t";
-      out << segment.dof + 1 << "\t";
+      out << segment.dof << "\t";
       // j, k1:k2 open sat_table_number
       out << "1\t1\t1\tOPEN\t1*\t";
       out << segment.wi * transmissibility_conversion_factor << "\t";
