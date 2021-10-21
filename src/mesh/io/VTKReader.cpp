@@ -100,13 +100,31 @@ void VTKReader::create_grid_()
 {
   const size_t n_cells = _vtk_ids.size();
   size_t idx = 0;
-  for (size_t icell=0; icell < n_cells; ++icell)
+
+  //check if 2D mesh upgrade it to 3D by single layer extrusion
+  bool is2D = true;
+  std::for_each(_vtk_ids.cbegin(),_vtk_ids.cend(),[&is2D](const int ids){ is2D &=(ids<10);});
+  if (is2D)
   {
-    const int id = _vtk_ids[icell];
-    if (id == angem::VTK_ID::GeneralPolyhedronID)
-      create_general_polyhedron_cell_(idx);
-    else
-      create_regular_polyhedron_cell_(id, idx);
+    const size_t off_vert = _grid.vertices().size();
+    _grid.vertices().resize( _grid.vertices().size() + off_vert);
+    for( size_t icell = 0; icell < n_cells; ++icell )
+    {
+      const int id = _vtk_ids[icell];
+      _vtk_ids[icell] = VTK_ID::GeneralPolyhedronID;
+      extrude_to_gen_polyhedron(id, idx, off_vert);
+    }
+  }
+  else
+  {
+    for( size_t icell = 0; icell < n_cells; ++icell )
+    {
+      const int id = _vtk_ids[icell];
+      if( id == angem::VTK_ID::GeneralPolyhedronID )
+        create_general_polyhedron_cell_( idx );
+      else
+        create_regular_polyhedron_cell_( id, idx );
+    }
   }
 }
 
@@ -132,10 +150,63 @@ void VTKReader::create_general_polyhedron_cell_(size_t & idx)
       cell_vertices_set.insert(v);
   std::vector<size_t> cell_vertices(cell_vertices_set.begin(), cell_vertices_set.end());
 
-
   _grid.insert_cell_( cell_vertices, take_faces, faces , angem::VTK_ID::GeneralPolyhedronID,
                       mesh::constants::default_cell_marker);
 }
+
+void VTKReader::extrude_to_gen_polyhedron(const int id, size_t& idx, size_t off_vert )
+{
+  const size_t n_cell_entries = _cell_entries[idx++];
+  const size_t n_faces = n_cell_entries + 2;
+
+
+  std::vector<mesh::FaceTmpData> faces(n_faces);
+  {
+    const size_t nv = n_cell_entries;
+    auto& face0 = faces.front();
+    auto& facen = faces.back();
+    face0.vertices.resize(nv);
+    face0.vtk_id = id;
+    facen.vertices.resize(nv);
+    facen.vtk_id = id;
+
+
+    for (size_t i=0; i<nv; ++i)
+    {
+      face0.vertices[i] = _cell_entries[idx];
+      facen.vertices[i] = _cell_entries[idx++] + off_vert;
+
+      //adding the proper vertices
+      auto ncoords = _grid.vertices()[face0.vertices[i]];
+      ncoords[2] += 1.0;
+      _grid.m_vertices[facen.vertices[i]] = ncoords;
+    }
+
+    size_t iface = 1;
+    const size_t base_sz = face0.vertices.size();
+    for (size_t in=0; in < base_sz; ++in)
+    {
+      faces[iface].vertices.resize(4);
+      faces[iface].vtk_id = 9;
+      //using peridoc index to close the cycles
+      faces[iface++].vertices = { face0.vertices[in], face0.vertices[((in+1)%base_sz)],
+                                 facen.vertices[((in+1)%base_sz)], facen.vertices[in] };
+    }
+  }
+
+  std::vector<size_t> take_faces(n_faces);
+  std::iota(take_faces.begin(), take_faces.end(), 0);
+  std::set<size_t> cell_vertices_set;
+  for (auto & f : faces)
+    for (const size_t v : f.vertices)
+      cell_vertices_set.insert(v);
+  std::vector<size_t> cell_vertices(cell_vertices_set.begin(), cell_vertices_set.end());
+
+
+ _grid.insert_cell_( cell_vertices, take_faces, faces , angem::VTK_ID::GeneralPolyhedronID,
+                     0 );
+}
+
 
 void VTKReader::create_regular_polyhedron_cell_(const int id, size_t & idx)
 {

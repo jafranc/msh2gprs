@@ -23,5 +23,10 @@ extern std::vector<GmshElementType> gmsh_element_types;
 // number of vertices for each gmsh element
 extern std::vector<std::size_t> gmsh_element_nvertices;
 
+//2d to 3d
+extern std::vector<int> msh_2d_3d_vtk;
+extern std::vector<GmshElementType> msh_2d_3d;
+extern std::vector<std::size_t> gmsh_element_nvert_2d_3d;
+
 
 }  // end namespace gprs_data

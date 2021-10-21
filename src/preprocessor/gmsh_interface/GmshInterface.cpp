@@ -300,6 +300,27 @@ void GmshInterface::read_msh_v4_(std::fstream & mesh_file, mesh::Mesh & mesh)
     } // endonodes
   }
 
+  ///////// here branch 2D or 3D
+  if( n_volumes == 0 ) //2d reading
+  {
+    fill_mesh_2_( mesh_file, mesh, surface_tags );
+  }
+  else
+  {
+    fill_mesh_3_( mesh_file, mesh, std::unordered_map< int, int >(), std::unordered_map< int, int >() );
+  }
+
+
+}
+
+void GmshInterface::fill_mesh_2_( std::fstream & mesh_file,
+                                  mesh::Mesh & mesh,
+                                  std::unordered_map< int, int > surface_tags )
+{
+  std::string entry, line;
+  std::vector< std::string > tokens;
+  size_t off_vert = mesh.vertices().size();
+  mesh.vertices().resize( mesh.vertices().size() + off_vert );
 
   //  read until elements
   while(entry != "$Elements")
@@ -338,14 +359,122 @@ void GmshInterface::read_msh_v4_(std::fstream & mesh_file, mesh::Mesh & mesh)
 
     const int entity_dim = std::atoi(tokens[0].c_str());
     const int entity_tag = std::atoi(tokens[1].c_str());
+    const int element_type = msh_2d_3d[std::atoi(tokens[2].c_str())];
+    const int n_element_vertices = get_n_vertices(element_type, true);
+
+    int physical_tag;
+//    if (entity_dim == 1)
+//      physical_tag = surface_tags[entity_tag];
+    if (entity_dim == 2)
+      physical_tag = 1 ;//surface_tags[entity_tag];
+
+    std::cout << "physical tag " << physical_tag << std::endl;
+
+    std::size_t n_elements_in_block;
+    std::stringstream sstream(tokens[3]);
+    sstream >> n_elements_in_block;
+    std::vector<std::size_t> vertices(n_element_vertices);
+
+    if (entity_dim == 2)
+      mesh.cells().reserve(mesh.cells().capacity() + n_elements);
+
+    for (size_t i = 0; i < n_elements_in_block; i++)
+    {
+      // line 3: element tag, element nodes
+      getline(mesh_file, line);
+      std::istringstream iss(line);
+      std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+                                      std::istream_iterator<std::string>{}};
+      static const int vert_shift = 1;  // index of first vertex in line
+
+      //create faces also from each pair of points
+
+
+      // fill node indices
+      for (int j = vert_shift; j<tokens.size(); j++)
+      {
+        vertices[j-vert_shift] = std::atoi(tokens[j].c_str()) - 1;
+        vertices[tokens.size()-1+j-vert_shift] = std::atoi(tokens[j].c_str()) + off_vert - 1;
+        //adding the ghost layers
+        auto ghost_coord = mesh.vertices()[vertices[j-vert_shift]];
+        ghost_coord[2] += 1.0;
+        mesh.vertices()[vertices[tokens.size()-1+j-vert_shift]] = ghost_coord;
+      }
+
+      //turn edges into faces
+      for (auto vid = 0 ; vid < vertices.size()/2-1; ++vid)
+      {
+        std::vector< size_t > face_vertices = { vertices[vid], vertices[vid + 1],
+                               vertices[tokens.size() - 1 + vid + 1],
+                               vertices[tokens.size() - 1 + vid] };
+        mesh.insert_face( face_vertices,
+                          get_vtk_id( element_type, true ), physical_tag );
+      }
+      if (entity_dim == 2)  // cells
+        mesh.insert_cell(vertices, get_vtk_id(element_type, true), physical_tag);
+
+
+
+      element++;
+//      std::cout << element <<std::endl;
+    }
+  }
+
+  std::cout << "n_cells = " << mesh.n_active_cells() << std::endl;
+}
+
+void GmshInterface::fill_mesh_3_( std::fstream & mesh_file,
+                                  mesh::Mesh & mesh,
+                                  std::unordered_map< int, int > surface_tags,
+                                  std::unordered_map< int, int > volume_tags )
+{
+  std::string entry, line;
+  std::vector< std::string > tokens;
+  //  read until elements
+  while(entry != "$Elements")
+    mesh_file >> entry;
+
+  // line 1:
+  //  numEntityBlocks(size_t) numElements(size_t)
+  // minElementTag(size_t) maxElementTag(size_t)
+
+  // number of entity blocks
+  mesh_file >> entry;
+
+  // number of elements
+  std::size_t n_elements;
+  mesh_file >> n_elements;
+
+//  std::cout << "\tn_elements = " << n_elements << std::endl;
+
+  //  min element tag
+  mesh_file >> entry;
+  //  max element tag
+  mesh_file >> entry;
+
+  size_t element = 0;
+  while (element < n_elements)
+  {
+    // line 2: block of data
+    // entityDim(int) entityTag(int)
+    // elementType(int; see below) numElementsInBlock(size_t)
+    getline(mesh_file, line);
+    std::istringstream iss(line);
+    std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+                                    std::istream_iterator<std::string>{}};
+    if (tokens.empty())
+      continue;
+
+    const int entity_dim = std::atoi(tokens[0].c_str());
+    const int entity_tag = std::atoi(tokens[1].c_str());
     const int element_type = std::atoi(tokens[2].c_str());
     const int n_element_vertices = get_n_vertices(element_type);
 
     int physical_tag;
-    if (entity_dim == 2)
-      physical_tag = surface_tags[entity_tag];
-    if (entity_dim == 3)
-      physical_tag = volume_tags[entity_tag];
+//    if (entity_dim == 2)
+//      physical_tag = surface_tags[entity_tag];
+//    if (entity_dim == 3)
+//      physical_tag = volume_tags[entity_tag];
 
     std::size_t n_elements_in_block;
     std::stringstream sstream(tokens[3]);
@@ -380,11 +509,11 @@ void GmshInterface::read_msh_v4_(std::fstream & mesh_file, mesh::Mesh & mesh)
   std::cout << "n_cells = " << mesh.n_active_cells() << std::endl;
 }
 
-size_t GmshInterface::get_n_vertices(const int element_type)
+size_t GmshInterface::get_n_vertices(const int element_type, bool is2d_)
 {
   if ((element_type < 0) || (element_type > gmsh_element_nvertices.size()))
     throw std::invalid_argument("Wrong vtk id type");
-  return gmsh_element_nvertices[element_type];
+  return (is2d_) ?  gmsh_element_nvert_2d_3d[element_type] : gmsh_element_nvertices[element_type];
 }
 
 int GmshInterface::get_gmsh_element_id(const angem::VTK_ID vtk_id)
@@ -396,11 +525,11 @@ int GmshInterface::get_gmsh_element_id(const angem::VTK_ID vtk_id)
 }
 
 
-int GmshInterface::get_vtk_id(const int element_type)
+int GmshInterface::get_vtk_id(const int element_type, bool is2d_ )
 {
   if ((element_type < 0) || (element_type > msh_id_to_vtk_id.size()))
     throw std::invalid_argument("Wrong vtk id type");
-  return msh_id_to_vtk_id[element_type];
+  return (is2d_) ? msh_2d_3d_vtk[element_type] : msh_id_to_vtk_id[element_type];
 }
 
 #ifdef WITH_GMSH

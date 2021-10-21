@@ -2,6 +2,28 @@
 
 namespace gprs_data {
 
+std::vector<int> msh_2d_3d_vtk = {
+  VTK_ID::InvalidElementID,
+  VTK_ID::QuadrangleID,
+  VTK_ID::InvalidElementID,
+  VTK_ID::WedgeID
+};
+
+std::vector<GmshElementType> msh_2d_3d =
+  {
+    GmshElementType::invalid_element, // [0]  does not exist
+    GmshElementType::face,            // [1]  2-node edge
+    GmshElementType::cell            // [2]  3-node triangle
+  };
+
+std::vector<std::size_t> gmsh_element_nvert_2d_3d =
+  {
+    0,
+    4,
+    0,
+    6
+  };
+
 // map gmsh element id to vtk id
 std::vector<int> msh_id_to_vtk_id = {
     VTK_ID::InvalidElementID,     // [0]  does not exist

@@ -45,9 +45,9 @@ class GmshInterface
                            const int dim = -1,
                            const int tag = -1);
   // get the number of vertices in a gmsh element type
-  static size_t get_n_vertices(const int element_type);
+  static size_t get_n_vertices(const int element_type, bool is2d_ = false);
   // get vtk id of a gmsh element type
-  static int get_vtk_id(const int element_type);
+  static int get_vtk_id(const int element_type, bool is2d_ = false);
   // save current gmsh model
   static void save_gmsh_grid(const std::string fname);
   // get gmsh id from vtk id
@@ -71,6 +71,16 @@ class GmshInterface
   static void insert_elements_(const int dim, const int tag,
                                const std::vector<size_t> & vertex_numbering,
                                mesh::Mesh & grid);
+
+
+  static void fill_mesh_2_( std::fstream & mesh_file,
+                            mesh::Mesh & mesh,
+                            std::unordered_map< int, int > surface_tags );
+  static void fill_mesh_3_( std::fstream & mesh_file,
+                            mesh::Mesh & mesh,
+                            std::unordered_map< int, int > surface_tags,
+                            std::unordered_map< int, int > volume_tags );
+
 };
 
 }  // end namespace gprs_data

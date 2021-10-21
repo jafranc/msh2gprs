@@ -30,6 +30,7 @@ class VTKReader
   void create_grid_();
   void create_general_polyhedron_cell_(size_t & entry_idx);
   void create_regular_polyhedron_cell_(const int vtk_id, size_t & entry_idx);
+  void extrude_to_gen_polyhedron(const int vtk_id,  size_t& idx, size_t off_vert );
   void read_data_arrays_(std::fstream & in);
   void read_array_(std::fstream & in, std::vector<double> & data,
                    std::string & name, const size_t array_size) const;
