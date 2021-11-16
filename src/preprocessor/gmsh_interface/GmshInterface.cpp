@@ -358,6 +358,8 @@ void GmshInterface::fill_mesh_2_( std::fstream & mesh_file,
       continue;
 
     const int entity_dim = std::atoi(tokens[0].c_str());
+    if(entity_dim == 0)
+      continue;
     const int entity_tag = std::atoi(tokens[1].c_str());
     const int element_type = msh_2d_3d[std::atoi(tokens[2].c_str())];
     const int n_element_vertices = get_n_vertices(element_type, true);
@@ -374,6 +376,8 @@ void GmshInterface::fill_mesh_2_( std::fstream & mesh_file,
     std::stringstream sstream(tokens[3]);
     sstream >> n_elements_in_block;
     std::vector<std::size_t> vertices(n_element_vertices);
+
+    std::cout << "zone " << element << ", " << element+n_elements_in_block-1 << std::endl;
 
     if (entity_dim == 2)
       mesh.cells().reserve(mesh.cells().capacity() + n_elements);

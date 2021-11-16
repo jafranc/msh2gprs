@@ -344,7 +344,6 @@ void YamlParser::domain(const YAML::Node & node, const VariableType var_type, Do
   for (auto it = node.begin(); it!=node.end(); ++it)
   {
     const std::string key = it->first.as<std::string>();
-    const std::string value = it->second.as<std::string>();
 
     logging::log() << "\t\treading entry " << key << std::endl;
 
@@ -367,6 +366,7 @@ void YamlParser::domain(const YAML::Node & node, const VariableType var_type, Do
     }
     else
     {
+      const std::string value = it->second.as<std::string>();
       // save property name and expression
       conf.variables.push_back(key);
       conf.expressions.push_back(value);
