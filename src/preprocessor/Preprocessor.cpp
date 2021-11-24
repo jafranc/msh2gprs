@@ -46,6 +46,8 @@ void Preprocessor::setup_grid_(const Path config_dir_path)
   {
     const Path grid_file_path = config_dir_path / config.mesh_config.file;
     read_mesh_file_( grid_file_path, config.mesh_config.swap_z );
+    data.nregions = config.mesh_config.nreg;
+    data.dz = config.mesh_config.dz;
   }
   else if (config.mesh_config.type == MeshType::cartesian)
   {

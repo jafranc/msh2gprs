@@ -25,4 +25,6 @@ struct MeshConfig
   mesh::CartesianMeshParameters cartesian;
   RefinementParameters refinement;
   size_t swap_z = 0;
+  size_t nreg = 1;
+  double dz = -1.0;
 };

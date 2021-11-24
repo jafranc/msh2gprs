@@ -32,7 +32,11 @@ void DiscretizationBase::build_cell_data_(const mesh::Cell& cell)
     cv.permeability(1,1) = m_data.cell_properties[ perm_idx[1] ][cell_index];
     cv.permeability(2,2) = m_data.cell_properties[ perm_idx[2] ][cell_index];
     cv.center = cell.center();
-    cv.volume = cell.volume() * m_data.cell_properties[ m_data.flow.vmult_idx ][cell_index];
+    cv.marker = cell.marker();
+    cv.volume = cell.volume();//* m_data.cell_properties[ m_data.flow.vmult_idx ][cell.marker()-1][cell_index];
+    if(m_data.dz > -1)
+     cv.volume *= m_data.dz;
+
 
     cv.custom.resize(m_data.flow.custom_idx.size());
     for (size_t i = 0; i < m_data.flow.custom_idx.size(); ++i)

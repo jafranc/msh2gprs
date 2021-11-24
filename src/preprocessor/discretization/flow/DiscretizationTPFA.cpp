@@ -37,6 +37,7 @@ void DiscretizationTPFA::build()
         con.center = face->center();
         con.normal = face->normal();
         con.area = face->area();
+        if(m_data.dz > -1.0) con.area *= m_data.dz;
         con.type = ConnectionType::matrix_matrix;
         build_mo(con, m_cv_data[ con.elements[0] ], m_cv_data[ con.elements[1] ]);
       }

@@ -116,6 +116,14 @@ void OutputDataGPRS::save_control_volume_data_(std::ofstream & out) const
         out << cv.custom[i] << std::endl;
       out << "/" << std::endl << std::endl;
   }
+
+  ///// Output Regions /////
+  // last as easier to split up output files if needed
+  out << "SATNUM" << std::endl;
+  for (const auto & cv : cvs)
+    out << cv.marker - 1 << std::endl;
+  out << "/" << std::endl << std::endl;
+
 }
 
 void OutputDataGPRS::save_trans_data_(std::ofstream & out) const
@@ -198,7 +206,7 @@ void OutputDataGPRS::save_trans_update_formulas_(std::ofstream & out) const
 void OutputDataGPRS::save_geometry_() const
 {
   const std::string outstring = _output_path + "/" + _config.geometry_file;
-  logging::log() << "saving mechaanics geometry: " << outstring << std::endl;
+  logging::log() << "saving mechanics geometry: " << outstring << std::endl;
 
   // gprs output
   std::ofstream out;

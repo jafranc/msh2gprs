@@ -510,25 +510,25 @@ void YamlParser::bc_node(const YAML::Node & node, BCConfig & conf)
 
 // DomainConfig & YamlParser::get_domain_config(const int label)
 // {
-  // find current domain id in existing config
-  // int counter = 0;
-  // for (const auto & domain : config.domains)
-  // {
-  //   if (label == domain.label)
-  //     break;
-  //   else
-  //     counter++;
-  // }
+// find current domain id in existing config
+// int counter = 0;
+// for (const auto & domain : config.domains)
+// {
+//   if (label == domain.label)
+//     break;
+//   else
+//     counter++;
+// }
 
-  // DomainConfig * p_conf;
-  // if (counter == config.domains.size())
-  // {
-  //   config.domains.emplace_back();
-  //   config.domains.back().label = label;
-  //   return config.domains.back();
-  // }
-  // else
-  //   return config.domains[counter];
+// DomainConfig * p_conf;
+// if (counter == config.domains.size())
+// {
+//   config.domains.emplace_back();
+//   config.domains.back().label = label;
+//   return config.domains.back();
+// }
+// else
+//   return config.domains[counter];
 // }
 
 void YamlParser::section_wells(const YAML::Node & node)
@@ -677,6 +677,10 @@ void YamlParser::section_mesh(const YAML::Node & node)
     {
       subsection_refinement(it->second);
     }
+    else if (key == "nregions")
+    {
+      conf.nreg = it->second.as<size_t>();
+    }
     else if (key == "swap-z")
     {
       auto val = it->second.as< std::string >();
@@ -689,8 +693,12 @@ void YamlParser::section_mesh(const YAML::Node & node)
         throw std::invalid_argument("Unknown dir " + val);
 
     }
-    
-    
+    else if(key=="dz" &&   conf.swap_z!=0 )
+    {
+      conf.dz = it->second.as< double >();
+    }
+
+
     else throw std::invalid_argument("Unknown key " + key);
   }
 }
