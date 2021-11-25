@@ -25,22 +25,25 @@ void DiscretizationBase::build_cell_data_(const mesh::Cell& cell)
     auto & cv = m_cv_data[ m_dofs.cell_dof(cell_index) ];
     cv.type = ControlVolumeType::cell;
     cv.master = cell_index;
-    cv.porosity = m_data.cell_properties[m_data.flow.porosity_idx][cell_index];
-    auto const &perm_idx = m_data.flow.permeability_idx;
-    assert( perm_idx.size() == 3 );
-    cv.permeability(0,0) = m_data.cell_properties[ perm_idx[0] ][cell_index];
-    cv.permeability(1,1) = m_data.cell_properties[ perm_idx[1] ][cell_index];
-    cv.permeability(2,2) = m_data.cell_properties[ perm_idx[2] ][cell_index];
+
+    cv.porosity = m_data.cell_properties[m_data.flow.porosity_idx][cell.marker()-1][cell_index];
+
+    {
+      auto const & perm_idx = m_data.flow.permeability_idx;
+      assert( perm_idx.size() == 3 );
+      cv.permeability( 0, 0 ) = m_data.cell_properties[perm_idx[0]][cell.marker()-1][cell_index];
+      cv.permeability( 1, 1 ) = m_data.cell_properties[perm_idx[1]][cell.marker()-1][cell_index];
+      cv.permeability( 2, 2 ) = m_data.cell_properties[perm_idx[2]][cell.marker()-1][cell_index];
+    }
+
     cv.center = cell.center();
     cv.marker = cell.marker();
     cv.volume = cell.volume();//* m_data.cell_properties[ m_data.flow.vmult_idx ][cell.marker()-1][cell_index];
-    if(m_data.dz > -1)
-     cv.volume *= m_data.dz;
 
 
     cv.custom.resize(m_data.flow.custom_idx.size());
     for (size_t i = 0; i < m_data.flow.custom_idx.size(); ++i)
-      cv.custom[i] = m_data.cell_properties[m_data.flow.custom_idx[i]][cell_index];
+      cv.custom[i] = m_data.cell_properties[m_data.flow.custom_idx[i]][cell.marker()-1][cell_index];
 }
 
 }

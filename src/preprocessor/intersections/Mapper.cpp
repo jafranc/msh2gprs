@@ -76,7 +76,7 @@ UniformCartesianGrid Mapper::build_grid_() const
   std::array<size_t,3> dims;
   for (size_t i = 0; i < 3; ++i)
   {
-    dims[i] = (size_t)((glob_max[i] - glob_min[i]) /(double) stepping[i]);
+    dims[i] = std::max( (size_t)((glob_max[i] - glob_min[i]) /(double) stepping[i]), (size_t) 1 );
     stepping[i] = (glob_max[i] - glob_min[i]) / dims[i];
   }
   return UniformCartesianGrid(glob_min, stepping, dims);

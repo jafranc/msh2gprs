@@ -45,9 +45,10 @@ void Preprocessor::setup_grid_(const Path config_dir_path)
   if (config.mesh_config.type == MeshType::file)
   {
     const Path grid_file_path = config_dir_path / config.mesh_config.file;
+    data.grid.m_extrude_dz = config.mesh_config.dz;
     read_mesh_file_( grid_file_path, config.mesh_config.swap_z );
     data.nregions = config.mesh_config.nreg;
-    data.dz = config.mesh_config.dz;
+
   }
   else if (config.mesh_config.type == MeshType::cartesian)
   {
@@ -125,6 +126,7 @@ void Preprocessor::run()
     data.grid.coarsen_cells();
     // pm_property_mgr->coarsen_cells();
   }
+
 
   write_output_();
 }
@@ -259,10 +261,10 @@ void Preprocessor::read_mesh_file_( const Path mesh_file_path, size_t swap_z )
 
 void Preprocessor::build_flow_discretization_()
 {
-  data.flow.permeability_idx = pm_property_mgr->get_permeability_keys();
-  data.flow.porosity_idx = pm_property_mgr->get_porosity_key();
-  data.flow.vmult_idx = pm_property_mgr->get_volume_mult_key();
-  data.flow.custom_idx = pm_property_mgr->get_custom_flow_keys();
+    data.flow.permeability_idx = pm_property_mgr->get_permeability_keys();
+    data.flow.porosity_idx = pm_property_mgr->get_porosity_key();
+    data.flow.vmult_idx = pm_property_mgr->get_volume_mult_key();
+    data.flow.custom_idx = pm_property_mgr->get_custom_flow_keys();
 
   // add properties for refined cells
   pm_property_mgr->downscale_properties();
@@ -314,7 +316,6 @@ void Preprocessor::build_flow_discretization_()
 
   logging::debug() << "invoke discretization class" << std::endl;
   flow_discr->build();
-
   // setup wells
   if (!config.wells.empty())
   {

@@ -5,7 +5,7 @@
 #include <algorithm>  // std::foreach
 #include <string>
 #include <cctype>  // tolower
-
+#include <valarray>
 
 namespace Parsers
 {
@@ -363,6 +363,41 @@ void YamlParser::domain(const YAML::Node & node, const VariableType var_type, Do
         config.input_global_varialbes.push_back(it_var->first.as<std::string>());
         config.input_property_file_names.push_back(it_var->second.as<std::string>());
       }
+    }
+    else if (key == "tagged-fields")
+    {
+      //used to read fields that are labeled as cell markers.
+      std::vector<size_t> ids;
+      std::vector< std::string > names;
+      std::vector< std::vector<double> > values;
+      for( auto it_var = it->second.begin(); it_var != it->second.end(); ++it_var )
+      {
+        auto subkey = it_var->first.as< std::string >();
+
+        //TODO (jacques) check if labels are really needed ...
+        if( subkey == "labels" )
+          ids = it_var->second.as< std::vector< size_t > >();
+        else
+        {
+          names.push_back( subkey );
+          values.push_back( it_var->second.as< std::vector< double > >() );
+        }
+      }
+
+      assert( names.size() == values.size() );
+
+      //for each regions
+      for (size_t ix=0; ix<values[0].size(); ++ix)
+      {
+        conf.tagged_vars.insert_or_assign(ids[ix], names );
+        //for each vars
+        std::vector<double> tmp;
+        for( size_t iv=0; iv < values.size(); ++iv)
+          tmp.push_back( values[iv][ix]);
+
+        conf.tagged_expr.insert_or_assign( ids[ix], tmp );
+      }
+
     }
     else
     {

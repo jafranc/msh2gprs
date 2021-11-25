@@ -1,5 +1,6 @@
 #include "utils.hpp"
 #include <cassert>
+#include <algorithm>
 
 namespace gprs_data {
 
@@ -52,5 +53,14 @@ double determinant_3x3(const std::vector<double> &m)
           m[2] * m[6] * m[4] +
           m[2] * m[3] * m[7];
 }
+
+std::string str_toupper(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(),
+                 [](unsigned char c){ return std::toupper(c);});
+
+  return s;
+}
+
 
 }  // end namespace gprs_data

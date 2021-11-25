@@ -178,7 +178,7 @@ void VTKReader::extrude_to_gen_polyhedron(const int id, size_t& idx, size_t off_
 
       //adding the proper vertices
       auto ncoords = _grid.vertices()[face0.vertices[i]];
-      ncoords[2] += 1.0;
+      ncoords[2] += (_grid.m_extrude_dz > -1) ? _grid.m_extrude_dz : 1.0;
       _grid.m_vertices[facen.vertices[i]] = ncoords;
     }
 

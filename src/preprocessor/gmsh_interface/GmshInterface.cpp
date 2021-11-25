@@ -368,7 +368,7 @@ void GmshInterface::fill_mesh_2_( std::fstream & mesh_file,
 //    if (entity_dim == 1)
 //      physical_tag = surface_tags[entity_tag];
     if (entity_dim == 2)
-      physical_tag = 1 ;//surface_tags[entity_tag];
+      physical_tag = surface_tags[entity_tag];
 
     std::cout << "physical tag " << physical_tag << std::endl;
 
@@ -401,7 +401,7 @@ void GmshInterface::fill_mesh_2_( std::fstream & mesh_file,
         vertices[tokens.size()-1+j-vert_shift] = std::atoi(tokens[j].c_str()) + off_vert - 1;
         //adding the ghost layers
         auto ghost_coord = mesh.vertices()[vertices[j-vert_shift]];
-        ghost_coord[2] += 1.0;
+        ghost_coord[2] += (mesh.m_extrude_dz > -1.) ? mesh.m_extrude_dz : 1.0;
         mesh.vertices()[vertices[tokens.size()-1+j-vert_shift]] = ghost_coord;
       }
 

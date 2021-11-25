@@ -1,6 +1,7 @@
 #include "OutputDataGPRS.hpp"
 #include "mesh/io/VTKWriter.hpp"     // provides IO::VTKWriter
 #include "logger/Logger.hpp"  // provides logging::log
+#include "preprocessor/utils.hpp"
 
 
 namespace gprs_data
@@ -100,6 +101,24 @@ void OutputDataGPRS::save_control_volume_data_(std::ofstream & out) const
     out << cv.porosity << std::endl;
   out << "/" << std::endl << std::endl;
 
+  ///// OUTPUT Porosity /////
+  {
+    out << "PERMX" << std::endl;
+    for( const auto & cv : cvs )
+      out << cv.permeability.get( 0, 0 ) << std::endl;
+    out << "/" << std::endl << std::endl;
+
+    out << "PERMY" << std::endl;
+    for( const auto & cv : cvs )
+      out << cv.permeability.get( 1, 1 ) << std::endl;
+    out << "/" << std::endl << std::endl;
+
+    out << "PERMZ" << std::endl;
+    for( const auto & cv : cvs )
+      out << cv.permeability.get( 2, 2 ) << std::endl;
+    out << "/" << std::endl << std::endl;
+  }
+
   ///// OUTPUT Depth  /////
   out << "DEPTH" << std::endl;
   auto highest_pt = std::numeric_limits<double_t>::min();
@@ -111,7 +130,7 @@ void OutputDataGPRS::save_control_volume_data_(std::ofstream & out) const
   // additional data (if any)
   for (size_t i = 0; i < _data.flow.custom_idx.size(); ++i) {
       size_t var = _data.flow.custom_idx[i];
-      out << _data.property_names[var] << std::endl;
+      out << gprs_data::str_toupper(_data.property_names[var]) << std::endl;
       for (const auto & cv : cvs)
         out << cv.custom[i] << std::endl;
       out << "/" << std::endl << std::endl;

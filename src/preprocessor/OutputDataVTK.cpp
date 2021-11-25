@@ -45,28 +45,63 @@ void OutputDataVTK::save_reservoir_flow_data_(const std::string & fname) const
       property[cell_index++] = cell->marker();
     mesh::IO::VTKWriter::add_data(property, keyword, out);
   }
-  // save porosity
-  // {
-  //   const size_t prop_key = _data.porosity_key_index;
-  //   std::vector<double> property(grid.n_active_cells());
-  //   const std::string keyword = "PORO";
-  //   size_t cell_index = 0;
-  //   for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
-  //     property[cell_index++] = _data.cell_properties[prop_key][cell->index()];
 
-  //   mesh::IO::VTKWriter::add_data(property, keyword, out);
-  // }
+  // save perm
+  {
+    const auto& perm_idx = _data.flow.permeability_idx;
+    if( std::all_of(_data.flow.permeability_idx.cbegin(), _data.flow.permeability_idx.cend(),
+       [&perm_idx](const int& d) { return d == perm_idx[0];}) )
+    {
+      const size_t prop_key = (size_t) perm_idx[0];
+      std::vector<double> property(grid.n_active_cells());
+      const std::string keyword = "PERM";
+      size_t cell_index = 0;
+      for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
+        property[cell_index++] = _data.cell_properties[prop_key][cell->marker()-1][cell->index()];
+
+      mesh::IO::VTKWriter::add_data(property, keyword, out);
+    }
+    else
+    {
+      std::array<std::string,3> dir = { "X", "Y", "Z"};
+      for (size_t i = 0 ; i < perm_idx.size(); ++i)
+      {
+        const size_t prop_key = (size_t) perm_idx[i];
+        std::vector<double> property(grid.n_active_cells());
+        const std::string keyword = "PERM" + dir[i];
+        size_t cell_index = 0;
+        for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
+          property[cell_index++] = _data.cell_properties[prop_key][cell->marker()-1][cell->index()];
+
+        mesh::IO::VTKWriter::add_data(property, keyword, out);
+      }
+
+    }
+
+  }
+
+  // save porosity
+  {
+    const size_t prop_key = _data.flow.porosity_idx;
+    std::vector<double> property(grid.n_active_cells());
+    const std::string keyword = "PORO";
+    size_t cell_index = 0;
+    for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
+      property[cell_index++] = _data.cell_properties[prop_key][cell->marker()-1][cell->index()];
+
+    mesh::IO::VTKWriter::add_data(property, keyword, out);
+  }
 
   // save custom keywords
   std::vector<double> property(grid.n_active_cells());
   for (std::size_t ivar=0; ivar < _data.property_types.size(); ++ivar)
     if (_data.property_types[ivar] == VariableType::flow)
-  {
-    size_t cell_index = 0;
-    for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
-      property[cell_index++] = _data.cell_properties[ivar][cell->index()];
-    mesh::IO::VTKWriter::add_data(property, _data.property_names[ivar], out);
-  }
+    {
+      size_t cell_index = 0;
+      for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
+        property[cell_index++] = _data.cell_properties[ivar][cell->marker()-1][cell->index()];
+      mesh::IO::VTKWriter::add_data(property, _data.property_names[ivar], out);
+    }
 
   // // save multiscale flow data
   // if (!data.ms_flow_data.partitioning.empty())

@@ -247,17 +247,23 @@ class Mesh
   std::vector<angem::Point<3,double>>   m_vertices;      // vector of vertex coordinates
   std::vector<Cell>                     m_cells;
   std::vector<Face>                     m_faces;
+
+
+
  public:
   std::vector<std::vector<std::size_t>> m_vertex_cells;  // vertex neighboring cells
   std::vector<std::vector<std::size_t>> m_vertex_faces;  // vertex neighboring faces
 
- private:
+  double m_extrude_dz = -1; // in the case of using 2D extruded grid
+
+private:
   size_t _n_inactive_cells;  //
 
   friend class Subdivision;
   friend class FaceSplitter;
   friend class CellSplitter;
   friend class io::VTKReader;
+
 };
 
 

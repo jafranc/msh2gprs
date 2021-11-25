@@ -23,7 +23,7 @@ class CellPropertyManager
    */
   CellPropertyManager(const CellPropertyConfig & cell_properties, SimData & data);
   // take config and fill out the grid with properties
-  void generate_properties(std::vector<std::vector<double>> & cell_properties);
+  void generate_properties(std::vector<std::vector<std::vector<double>>> & cell_properties);
   // get names of properties
   std::vector<std::string> get_property_names() const;
   // get types of properties
@@ -50,7 +50,10 @@ class CellPropertyManager
   size_t evaluate_expressions_(const DomainConfig& domain,
                                std::vector<mu::Parser> & parsers,
                                std::vector<double> & cell_vars,
-                               std::vector<std::vector<double>> &  cell_properties);
+                               std::vector<std::vector<std::vector<double>>> &  cell_properties);
+  size_t evaluate_tagged_(const DomainConfig& domain,
+                               std::vector<double> & cell_vars,
+                               std::vector<std::vector<std::vector<double>>> &  cell_properties);
   void assign_custom_functions_(std::vector<mu::Parser> & parsers);
   void build_permeability_function_();
 
@@ -59,6 +62,8 @@ class CellPropertyManager
   void evaluate_non_expression_properties_(mesh::Cell const & cell, std::vector<double>&cell_vars);
   std::unordered_map<std::string, size_t> map_variables_();
   std::vector<std::vector<double>> read_files_();
+
+  size_t getNumberOfTags() const;
 
   CellPropertyConfig const & _config;
   SimData & m_data;
