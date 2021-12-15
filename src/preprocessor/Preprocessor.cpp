@@ -64,6 +64,8 @@ void Preprocessor::run()
   // property manager for grid with split cells (due to edfm splitting)
   pm_property_mgr = std::make_shared<CellPropertyManager>(config.cell_properties, data);
   logging::log() << "Generating properties" << std::endl;
+
+  mesh::IO::VTKWriter::write_geometry(data.grid, "debug.vtk");
   pm_property_mgr->generate_properties(data.cell_properties);
   data.property_names = pm_property_mgr->get_property_names();
   data.property_types = pm_property_mgr->get_property_types();
@@ -96,7 +98,7 @@ void Preprocessor::run()
 
   // leave this line commented out while not debugging,
   // this is helpful when I debug :-)
-  // mesh::IO::VTKWriter::write_geometry(data.grid, "debug.vtk");
+//   mesh::IO::VTKWriter::write_geometry(data.grid, "debug.vtk");
 
   logging::important() << "Building flow discretization" << "\n";
   build_flow_discretization_();

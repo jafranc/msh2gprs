@@ -204,7 +204,7 @@ void VTKReader::extrude_to_gen_polyhedron(const int id, size_t& idx, size_t off_
 
 
  _grid.insert_cell_( cell_vertices, take_faces, faces , angem::VTK_ID::GeneralPolyhedronID,
-                     0 );
+                     1 );
 }
 
 
