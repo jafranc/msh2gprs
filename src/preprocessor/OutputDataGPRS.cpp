@@ -318,7 +318,7 @@ void OutputDataGPRS::save_geomechanics_keywords_() const
     for (auto cell = grid.begin_active_cells(); cell != grid.end_active_cells(); ++cell)
     {
       const std::size_t icell = cell->index();
-      out << _data.cell_properties[prop_key][cell->index()] << "\t";
+      out << _data.cell_properties[prop_key][cell->marker()-1][cell->index()] << "\t";
       if (++cnt % n_entries_per_line == 0)
         out << "\n";
     }
@@ -603,8 +603,14 @@ void OutputDataGPRS::save_flow_multiscale_data_(const std::string file_name) con
   for (size_t c = 0; c < ms.n_coarse; ++c) {
     out << ms.support_boundary[c].size() << " ";
     out << ms.support_internal[c].size() << " ";
+    //start with the centroids after the sum checks data
+    out << ms.centroids[c] << " ";
     for (size_t i = 0; i < ms.support_internal[c].size(); ++i) {
-      out << ms.support_internal[c][i] << " ";
+      if(ms.support_internal[c][i] == ms.centroids[c]) // do not repeat the centroids
+        continue;
+      else
+        out << ms.support_internal[c][i] << " ";
+
       if (i % n_entries_per_line == 0 && i > 0 && i != ms.support_internal[c].size() - 1) out << "\n";
     }
     // out << "bnd: " << std::endl;

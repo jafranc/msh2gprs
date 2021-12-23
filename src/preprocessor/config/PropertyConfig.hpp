@@ -14,6 +14,11 @@ struct DomainConfig
   int label;
   std::vector<std::string> expressions;
   std::vector<std::string> variables;
+
+  std::vector< size_t > labels;
+  std::unordered_map< size_t, std::vector<std::string> > tagged_vars;
+  std::unordered_map< size_t, std::vector<double> > tagged_expr;
+
   VariableType type;
   bool coupled = true;  // whether to generate mapping
 };

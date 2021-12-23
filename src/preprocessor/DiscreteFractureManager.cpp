@@ -95,12 +95,12 @@ void DiscreteFractureManager::distribute_properties()
         f.custom_flow_data.resize(n_flow_props);
         size_t iprop = 0;
         for (size_t j = 0; j < m_data.property_types.size(); ++j)
-          if (m_data.property_types[j] == VariableType::flow)
-          {
-            f.custom_flow_data[iprop++] +=
-                (m_data.cell_properties[j][cell1.index()] * v1 +
-                 m_data.cell_properties[j][cell2.index()] * v2 ) / ( v1 + v2 ) ;
-          }
+            if (m_data.property_types[j] == VariableType::flow)
+            {
+              f.custom_flow_data[iprop++] +=
+                  (m_data.cell_properties[j][cell1.marker()-1][cell1.index()] * v1 +
+                   m_data.cell_properties[j][cell2.marker()-1][cell2.index()] * v2 ) / ( v1 + v2 ) ;
+            }
         m_data.dfm_faces.insert({face->index(), std::move(f)});
       }
 }

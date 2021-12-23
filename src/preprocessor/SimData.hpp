@@ -50,7 +50,11 @@ struct FlowData
 {
   // mesh::Mesh grid;  // @TODO move here
   std::vector<int> permeability_idx = {-1, -1, -1};              // permeability key indices in cell_properties (kxx, kyy kzz)
+  std::vector< std::vector<int> > permeability_tidx;              // permeability key indices in cell_properties (kxx, kyy kzz)
+
   size_t porosity_idx = std::numeric_limits<size_t>::max(); // porosity key index in cell_properties
+  std::vector<size_t> porosity_tidx; // porosity key index in cell_properties
+
   std::vector<size_t> output_idx;                                     // indices of properties to output
   size_t vmult_idx = std::numeric_limits<size_t>::max();     // volume mult index in cell_properties
   std::vector<size_t> custom_idx;
@@ -65,7 +69,7 @@ struct SimData
   // cell properties
   // ----------------------- Reservoir cells ------------------------ //
   std::vector<std::string> property_names;
-  std::vector<std::vector<double>> cell_properties;
+  std::vector<std::vector< std::vector<double>>> cell_properties;// [key_prop][region][cell_index]
   std::vector<VariableType> property_types;
   std::vector<size_t> output_mech_properties;                     // indices of mech property keywords
   FlowData flow;
@@ -111,6 +115,11 @@ struct SimData
   std::vector<std::vector<size_t>> gmcell_to_SDA_flowcells; // Geomechanics cell in EDFM -> Flow cells in each geomech cell in EDFM.
   // Helps to search iintersections fast
   std::unique_ptr<GridIntersectionSearcher> grid_searcher;
+  //------------------------------------------------------//
+  size_t nregions;
+//  double dz;
+
+
 };
 
 
