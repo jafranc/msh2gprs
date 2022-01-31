@@ -317,7 +317,7 @@ void Preprocessor::build_flow_discretization_()
     data.flow_numbering = p_unsplit_dofs;
 
   logging::debug() << "invoke discretization class" << std::endl;
-  flow_discr->build();
+//  flow_discr->build();
   // setup wells
   if (!config.wells.empty())
   {
